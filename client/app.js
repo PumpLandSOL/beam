@@ -1,5 +1,5 @@
 // BEAM shared client: header, footer, formatting, wallet (EVM, Robinhood Chain)
-const BEAM = { ca: '', x: '', gh: '', domain: 'beam', chain: { id: 4663, hex: '0x1237', name: 'Robinhood Chain', rpc: 'https://rpc.mainnet.chain.robinhood.com', explorer: 'https://explorer.mainnet.chain.robinhood.com' } };
+const BEAM = { ca: '', x: 'https://x.com/BeamProtocolRH', gh: 'https://github.com/PumpLandSOL/beam', domain: 'beamprotocol.org', chain: { id: 4663, hex: '0x1237', name: 'Robinhood Chain', rpc: 'https://rpc.mainnet.chain.robinhood.com', explorer: 'https://explorer.mainnet.chain.robinhood.com' } };
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 const api = async (p, b) => { const r = await fetch(p, b ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) } : {}); return r.json(); };
