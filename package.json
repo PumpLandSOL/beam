@@ -1,0 +1,9 @@
+{
+  "name": "beam-oracle",
+  "version": "1.0.0",
+  "description": "BEAM: the oracle network for Robinhood Chain. Validators, stake-weighted median, signed packets, tunnels, BeamReceiver.",
+  "main": "server/index.js",
+  "scripts": { "start": "node server/index.js", "deploy-receiver": "node server/deploy.js", "test": "node _studio/anvil-e2e.cjs" },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}

@@ -1,0 +1,7 @@
+node_modules/
+data/
+contracts/cache/
+contracts/out/*
+!contracts/out/BeamReceiver.sol/
+_studio/frames-*/
+*.log

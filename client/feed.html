@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feed · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css">
+<style>.fh{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;padding:46px 0 24px;border-bottom:1px solid var(--rule)}
+.px{font-family:var(--serif);font-size:clamp(56px,7vw,96px);line-height:.95;margin-top:10px}
+.rg{display:flex;gap:6px}.rg button{height:32px;padding:0 13px;border-radius:999px;border:1px solid var(--rule2);background:none;font:12px var(--mono)}.rg button.on{background:var(--ink);color:var(--bg)}
+#ch{width:100%;height:340px;display:block}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}.card h3{font-family:var(--serif);font-weight:400;font-size:28px;padding:18px 18px 4px}
+.bar{height:6px;border-radius:3px;background:var(--rule);position:relative;min-width:80px}.bar i{position:absolute;top:-3px;width:3px;height:12px;background:var(--ink);border-radius:2px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}</style></head><body>
+<main class="wrap"><section class="fh"><div><a class="mono dim" href="/feeds" style="font-size:12px">← ALL FEEDS</a><div class="eyebrow" style="margin-top:16px"><i></i><span id="fid"></span></div><div class="px" id="px">—</div><div class="mono" style="margin-top:8px" id="sub"></div></div>
+<div class="rg" id="rg"></div></section>
+<div class="card" style="margin-top:22px;padding:14px"><canvas id="ch"></canvas></div>
+<div class="grid2"><div class="card"><h3>Validator submissions</h3><p class="dim" style="padding:0 18px 10px;font-size:14px">What each validator signed this round, against the agreed price.</p><table class="tbl"><thead><tr><th>Validator</th><th class="r">Submitted</th><th class="r">vs agreed</th></tr></thead><tbody id="vt"></tbody></table></div>
+<div class="card"><h3>Raw exchange quotes</h3><p class="dim" style="padding:0 18px 10px;font-size:14px">The latest quote from each source the network reads. Validators each use their own mix.</p><table class="tbl"><thead><tr><th>Source</th><th class="r">Quote</th><th class="r">vs agreed</th></tr></thead><tbody id="st"></tbody></table></div></div></main>
+<script src="/app.js"></script><script>chrome('/feeds');
+const ID = new URLSearchParams(location.search).get('id') || 'CS:BTC-USD'; let R = '1d', D = null;
+$('rg').innerHTML = ['1h', '6h', '1d', '7d'].map((r) => `<button data-r="${r}" onclick="R='${r}';load()">${r.toUpperCase()}</button>`).join('');
+const dv = (p, m) => p == null || !m ? '—' : ((p - m) / m * 1e4).toFixed(1) + ' bps';
+async function load() { D = await api('/api/feed/' + encodeURIComponent(ID) + '?range=' + R); if (D.error) { $('px').textContent = 'Unknown feed'; return; } document.title = D.sym + ' · BEAM';
+  document.querySelectorAll('#rg button').forEach((b) => b.classList.toggle('on', b.dataset.r === R));
+  $('fid').textContent = D.id + ' · ' + CLS[D.cls]; $('px').innerHTML = '$' + fp(D.price); $('sub').innerHTML = `<b>${esc(D.name)}</b> · <span class="${D.chg >= 0 ? 'up' : 'dn'}">${fpct(D.chg)} 24h</span> · <span class="dim">round #${D.round} · ${D.n} validators · spread ${D.spread == null ? '—' : D.spread.toFixed(1) + ' bps'}</span>`;
+  $('vt').innerHTML = D.subs.map((s) => `<tr><td><b>${s.name}</b><div class="mono dim" style="font-size:11px">${short(s.address)}</div></td><td class="r num">${s.price == null ? '—' : '$' + fp(s.price)}</td><td class="r num dim">${dv(s.price, D.price)}</td></tr>`).join('');
+  $('st').innerHTML = Object.entries(D.sources).filter(([, v]) => v != null).map(([k, v]) => `<tr><td class="mono">${k}</td><td class="r num">$${fp(v)}</td><td class="r num dim">${dv(v, D.price)}</td></tr>`).join('') || '<tr><td colspan="3" class="dim">No quotes.</td></tr>';
+  chart(); }
+function chart() { const cv = $('ch'), g = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, dpr = devicePixelRatio || 1; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const c = D.candles; if (c.length < 2) { g.font = '14px Inter Tight'; g.fillStyle = '#8b8a93'; g.fillText('Collecting history. The chart fills in as rounds land.', 20, 40); return; }
+  const lo = Math.min(...c.map((x) => x[3])), hi = Math.max(...c.map((x) => x[2])), r = hi - lo || hi * .001, pl = 10, pr = 80, X = (i) => pl + i / (c.length - 1) * (W - pl - pr), Y = (v) => 14 + (1 - (v - lo) / r) * (H - 40);
+  g.strokeStyle = '#e2dfd6'; g.lineWidth = 1; g.font = '11px JetBrains Mono'; g.fillStyle = '#8b8a93'; for (let k = 0; k <= 4; k++) { const v = lo + r * k / 4, y = Y(v); g.beginPath(); g.moveTo(pl, y); g.lineTo(W - pr, y); g.stroke(); g.fillText(fp(v), W - pr + 8, y + 4); }
+  const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, '#7c3aed'); gr.addColorStop(.35, '#06b6d4'); gr.addColorStop(.65, '#22c55e'); gr.addColorStop(1, '#f97316');
+  const ar = g.createLinearGradient(0, 14, 0, H); ar.addColorStop(0, 'rgba(91,60,255,.12)'); ar.addColorStop(1, 'rgba(91,60,255,0)');
+  g.beginPath(); c.forEach((x, i) => (i ? g.lineTo(X(i), Y(x[4])) : g.moveTo(X(i), Y(x[4])))); g.strokeStyle = gr; g.lineWidth = 2.2; g.stroke(); g.lineTo(X(c.length - 1), H - 26); g.lineTo(X(0), H - 26); g.fillStyle = ar; g.fill();
+  const t0 = c[0][0], t1 = c[c.length - 1][0]; g.fillStyle = '#8b8a93'; [0, .5, 1].forEach((f) => { const t = new Date((t0 + (t1 - t0) * f) * 1000); g.fillText(R === '7d' ? t.toLocaleDateString() : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), Math.min(W - pr - 60, pl + f * (W - pl - pr - 60)), H - 6); }); }
+load(); setInterval(load, 10000); addEventListener('resize', () => D && chart());
+</script></body></html>

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: beam
+    runtime: node
+    buildCommand: "true"
+    startCommand: node server/index.js
+    envVars:
+      - key: DATA_PATH
+        value: /data
+      - key: CHAIN_ID
+        value: "4663"
+    disk:
+      name: beam-data
+      mountPath: /data
+      sizeGB: 1

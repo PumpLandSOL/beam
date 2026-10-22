@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BEAM · The oracle network for Robinhood Chain</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css">
+<meta name="description" content="BEAM brings prices onto Robinhood Chain: many exchanges, many validators, one stake-weighted price, delivered on-chain with signatures anyone can verify.">
+<meta property="og:title" content="BEAM · The oracle network for Robinhood Chain"><meta property="og:image" content="/og.png"><meta name="twitter:card" content="summary_large_image">
+<style>
+.hero{position:relative;border-bottom:1px solid var(--rule);overflow:hidden}
+.hero .wrap{position:relative;z-index:2;padding-top:70px;padding-bottom:40px;pointer-events:none}.hero .wrap *{pointer-events:auto}
+.hero .h1{margin-top:22px;max-width:760px}.hero .lead{margin-top:24px}
+.hero .cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+#prism{display:block;width:100%;height:440px;margin-top:-80px}
+.ca{display:inline-flex;align-items:center;gap:10px;margin-top:22px;border:1px solid var(--rule2);background:var(--paper);border-radius:999px;padding:6px 6px 6px 16px;font-family:var(--mono);font-size:12.5px}
+.ca button{border:0;background:var(--ink);color:var(--bg);border-radius:999px;height:28px;padding:0 12px;font-size:12px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
+.step{padding:40px 26px 44px 0;border-right:1px solid var(--rule);position:relative}.step+.step{padding-left:26px}.step:last-child{border:0}
+.step .n{font-family:var(--mono);font-size:12px;color:var(--ink3)}.step h3{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1;margin:14px 0 12px}.step p{color:var(--ink2);font-size:15px}
+.step .bar{height:3px;width:52px;margin-top:22px}
+.sec{padding:80px 0 0}.sec .top{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.code{background:#0d0d12;color:#e8e6df;border-radius:4px;padding:26px 28px;font:13.5px/1.7 var(--mono);overflow:auto;white-space:pre}
+.code .k{color:#a78bfa}.code .s{color:#86efac}.code .c{color:#6b6a75}
+.two{display:grid;grid-template-columns:1fr 1.15fr;gap:46px;align-items:center}
+.vs{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule)}
+.vs div{padding:26px 22px 26px 0;border-bottom:1px solid var(--rule)}.vs div:nth-child(3n+2),.vs div:nth-child(3n+3){padding-left:22px;border-left:1px solid var(--rule)}
+.vs b{display:block;font-family:var(--serif);font-weight:400;font-size:28px;line-height:1.05;margin-bottom:8px}.vs span{color:var(--ink2);font-size:15px}
+@media(max-width:900px){.steps,.vs{grid-template-columns:1fr}.step,.step+.step{padding:28px 0;border-right:0;border-bottom:1px solid var(--rule)}.vs div,.vs div:nth-child(3n+2),.vs div:nth-child(3n+3){padding:22px 0;border-left:0}.two{grid-template-columns:1fr}#prism{height:300px;margin-top:-20px}}
+</style></head><body>
+<section class="hero"><div class="wrap">
+  <div class="eyebrow"><i></i>Oracle network · Robinhood Chain</div>
+  <h1 class="h1">Every price,<br><span class="it">in one</span> <span class="spec it">beam.</span></h1>
+  <p class="lead">BEAM pulls prices from eight exchanges and Wall Street feeds, has a validator set agree on each one, and delivers it to Robinhood Chain signed, so any contract can check it before it trusts it.</p>
+  <div class="cta"><a class="btn pri" href="/feeds">Explore live feeds</a><a class="btn" href="/tunnels">Open a tunnel</a><a class="btn" href="/docs">Read the docs</a></div>
+  <div id="cab"></div>
+</div><canvas id="prism"></canvas></section>
+<main class="wrap">
+<div class="stats"><div class="stat"><div class="l"><span class="dot"></span>&nbsp; Round</div><div class="v" id="s1">—</div></div><div class="stat"><div class="l">Live feeds</div><div class="v" id="s2">—</div></div><div class="stat"><div class="l">Validators</div><div class="v" id="s3">—</div></div><div class="stat"><div class="l">Packets signed</div><div class="v" id="s4">—</div></div></div>
+<div class="steps">
+  <div class="step"><div class="n">01 · SOURCE</div><h3>Many exchanges.</h3><p>Each validator reads prices from its own mix of exchanges: Coinbase, Kraken, OKX, Gemini, Bitfinex, Binance.US, Crypto.com and Bitstamp, plus market data for stocks, FX and metals.</p><div class="bar" style="background:#7c3aed"></div></div>
+  <div class="step"><div class="n">02 · AGREE</div><h3>One price.</h3><p>Every round, each validator signs what it saw. The network takes the stake-weighted median, so no single exchange or validator can move a price.</p><div class="bar" style="background:#06b6d4"></div></div>
+  <div class="step"><div class="n">03 · SIGN</div><h3>Sealed with proof.</h3><p>Prices are packed into a packet and signed by the validators. More than two thirds of stake has to sign before a packet means anything.</p><div class="bar" style="background:#22c55e"></div></div>
+  <div class="step"><div class="n">04 · DELIVER</div><h3>On-chain.</h3><p>A tunnel carries packets to Robinhood Chain on your schedule, or the moment a price moves. The BeamReceiver contract checks every signature before it stores a thing.</p><div class="bar" style="background:#f97316"></div></div>
+</div>
+<section class="sec"><div class="top"><div><div class="eyebrow"><i></i>Live now</div><h2 class="h2" style="margin-top:14px">Prices, <span class="it">as agreed.</span></h2></div><a class="btn" href="/feeds">All feeds →</a></div>
+<div class="card"><table class="tbl"><thead><tr><th>Feed</th><th class="hm">Class</th><th class="r">Price</th><th class="r">24h</th><th class="r hm">Validators</th><th class="r hm">Last 6h</th></tr></thead><tbody id="ft"></tbody></table></div></section>
+<section class="sec"><div class="two"><div><div class="eyebrow"><i></i>For builders</div><h2 class="h2" style="margin-top:14px">Two lines <span class="it">to read a price.</span></h2><p class="lead" style="margin-top:18px;font-size:17px">Open a tunnel for the feeds you need, point it at a BeamReceiver, and read. Every stored price was signed by more than two thirds of validator stake, and you can check any packet yourself on the Verify page.</p><div class="cta" style="display:flex;gap:12px;margin-top:24px"><a class="btn pri" href="/tunnels">Open a tunnel</a><a class="btn" href="/contracts/BeamReceiver.sol">View contract</a></div></div>
+<div class="code"><span class="c">// read BEAM prices on Robinhood Chain</span>
+<span class="k">interface</span> IBeam {
+  <span class="k">function</span> getPriceNoOlderThan(<span class="k">bytes32</span> id, <span class="k">uint256</span> maxAge)
+    <span class="k">external view returns</span> (<span class="k">int256</span> price, <span class="k">uint64</span> ts);
+}
+
+(<span class="k">int256</span> tsla, ) = IBeam(beam).getPriceNoOlderThan(
+  <span class="s">"EQ:TSLA-USD"</span>, <span class="s">120</span>);   <span class="c">// 8 decimals</span></div></div></section>
+<section class="sec"><div class="eyebrow"><i></i>Why BEAM</div><h2 class="h2" style="margin:14px 0 30px">Built for <span class="it">Robinhood Chain.</span></h2>
+<div class="vs"><div><b>Stocks, natively.</b><span>Tesla, NVIDIA, Robinhood and the S&amp;P 500 sit next to BTC and ETH, as first-class feeds, including after-hours prints.</span></div><div><b>Nobody to trust.</b><span>A price lands only when validators holding more than two thirds of stake sign it. The contract checks; you don't have to.</span></div><div><b>Anyone can relay.</b><span>Packets are self-proving. Our relayer delivers them, and so can you, or anyone else.</span></div>
+<div><b>Push on your terms.</b><span>Tunnels update on a heartbeat, on a price move, or both. You choose the feeds, the interval and the threshold.</span></div><div><b>Open to inspect.</b><span>Every round, every validator submission and every signature is public in the explorer, as it happens.</span></div><div><b>Verify in a browser.</b><span>Paste any packet into Verify and your browser recomputes the hash and recovers every signer itself.</span></div></div></section>
+</main>
+<script src="/app.js"></script><script>chrome('/');
+if (BEAM.ca) $('cab').innerHTML = `<div class="ca"><span>$BEAM</span><span>${BEAM.ca}</span><button onclick="navigator.clipboard.writeText(BEAM.ca);toast('Copied')">Copy</button></div>`;
+const SHOW = ['CS:BTC-USD', 'EQ:TSLA-USD', 'CS:ETH-USD', 'EQ:NVDA-USD', 'EQ:HOOD-USD', 'CM:XAU-USD', 'CS:SOL-USD', 'FX:EUR-USD'];
+let FEEDS = {};
+async function load() { const [st, f] = await Promise.all([api('/api/status'), api('/api/feeds')]); FEEDS = Object.fromEntries(f.feeds.map((x) => [x.id, x]));
+  $('s1').textContent = '#' + st.round.toLocaleString(); $('s2').textContent = st.signals; $('s3').textContent = st.validators; $('s4').textContent = st.packets.toLocaleString();
+  $('ft').innerHTML = SHOW.map((id) => FEEDS[id]).filter(Boolean).map((x) => `<tr onclick="location='/feed?id=${encodeURIComponent(x.id)}'" style="cursor:pointer"><td><b>${x.sym}</b> <span class="dim">${esc(x.name)}</span><div class="mono dim" style="font-size:11px">${x.id}</div></td><td class="hm"><span class="tag">${CLS[x.cls]}</span></td><td class="r num">$${fp(x.price)}</td><td class="r num ${x.chg >= 0 ? 'up' : 'dn'}">${fpct(x.chg)}</td><td class="r num hm">${x.n}/${st.validators}</td><td class="r hm">${sparkSvg(x.spark)}</td></tr>`).join(''); }
+load(); setInterval(load, 10000);
+// ---- the prism: white light in, live prices out ----
+const cv = $('prism'), g = cv.getContext('2d'), RAYS = [['#7c3aed', 'CS:BTC-USD'], ['#3b82f6', 'CS:ETH-USD'], ['#06b6d4', 'EQ:TSLA-USD'], ['#22c55e', 'EQ:NVDA-USD'], ['#eab308', 'EQ:HOOD-USD'], ['#f97316', 'CM:XAU-USD'], ['#ef4444', 'CS:SOL-USD']];
+function draw(t) { const W = cv.clientWidth, H = cv.clientHeight, dpr = devicePixelRatio || 1; if (cv.width !== W * dpr) { cv.width = W * dpr; cv.height = H * dpr; } g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const mob = W < 700, px = mob ? W * .34 : W * .5, py = H * .58, s = mob ? 70 : 96, A = [px, py - s], B = [px + s * .9, py + s * .62], Cc = [px - s * .9, py + s * .62];
+  const inY = py + 8, inX = px - s * .45; g.lineWidth = 2.4; g.strokeStyle = '#0d0d12'; g.beginPath(); g.moveTo(0, inY - 60); g.lineTo(inX, inY); g.stroke();
+  for (let k = 0; k < 6; k++) { const f = ((t / 1600 + k / 6) % 1), x = f * inX, y = inY - 60 + 60 * f; g.fillStyle = '#0d0d12'; g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); }
+  const ox = px + s * .42, oy = py + 4, endX = W - (mob ? 8 : 40);
+  RAYS.forEach(([c, id], i) => { const ang = (-0.34 + i * (0.68 / (RAYS.length - 1))) * (mob ? 1.15 : 1), ex = endX, ey = oy + Math.tan(ang) * (ex - ox) * .9 + 20;
+    const gr = g.createLinearGradient(ox, oy, ex, ey); gr.addColorStop(0, c + '00'); gr.addColorStop(.25, c + 'cc'); gr.addColorStop(1, c); g.strokeStyle = gr; g.lineWidth = 2.2; g.beginPath(); g.moveTo(ox, oy); g.lineTo(ex, ey); g.stroke();
+    const f = (t / 2200 + i * .13) % 1; g.fillStyle = c; g.beginPath(); g.arc(ox + (ex - ox) * f, oy + (ey - oy) * f, 2.6, 0, 7); g.fill();
+    const fd = FEEDS[id]; if (fd && !mob) { const lx = ex - 190, ly = oy + (ey - oy) * ((lx - ox) / (ex - ox)) - 10; g.fillStyle = 'rgba(245,243,238,.92)'; g.fillRect(lx - 6, ly - 15, 196, 22); g.font = '600 12.5px "JetBrains Mono"'; g.fillStyle = c; g.fillText(fd.sym, lx, ly); g.fillStyle = '#0d0d12'; g.font = '500 12.5px "JetBrains Mono"'; g.fillText('$' + fp(fd.price), lx + 52, ly); } });
+  g.fillStyle = 'rgba(255,254,251,.94)'; g.strokeStyle = '#0d0d12'; g.lineWidth = 2.4; g.lineJoin = 'round'; g.beginPath(); g.moveTo(...A); g.lineTo(...B); g.lineTo(...Cc); g.closePath(); g.fill(); g.stroke();
+  requestAnimationFrame(draw); }
+requestAnimationFrame(draw); window.__draw = draw;
+</script></body></html>

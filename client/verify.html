@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verify · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><meta name="description" content="Verify any BEAM packet in your browser: recompute the hash and recover every validator signature yourself.">
+<style>.lay{display:grid;grid-template-columns:1fr 1.2fr;gap:22px;margin-top:26px;align-items:start}.pan{padding:24px}
+.verdict{font-family:var(--serif);font-size:54px;line-height:1}.kv{font:12.5px/1.8 var(--mono);word-break:break-all;margin-top:14px}.kv b{color:var(--ink3);font-weight:400;display:inline-block;min-width:96px}
+.sg{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--rule);font:12.5px var(--mono)}.meter{height:10px;background:var(--rule);border-radius:5px;position:relative;margin:18px 0 6px;overflow:hidden}.meter i{position:absolute;inset:0 auto 0 0;background:var(--spec)}.meter u{position:absolute;top:-4px;bottom:-4px;left:66.67%;width:2px;background:var(--ink)}
+@media(max-width:900px){.lay{grid-template-columns:1fr}}</style></head><body>
+<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>Verify</div><h1 class="h2">Don't trust it. <span class="it">Check it.</span></h1><p>Load any packet and your browser recomputes its hash exactly the way the BeamReceiver contract does, then recovers every signature with secp256k1 and adds up the signers' stake. Nothing here is taken from the server's word.</p></section>
+<div class="lay"><div class="card pan"><span class="lbl" style="margin-top:0">Load a packet</span><div style="display:flex;gap:8px"><input class="in" id="tt" placeholder="tunnel" style="width:110px"><input class="in" id="ss" placeholder="sequence" style="width:130px"><button class="btn" onclick="byId()">Load</button><button class="btn" onclick="latest()">Latest</button></div>
+  <span class="lbl">Or paste packet JSON</span><textarea class="in" id="pj" rows="12" spellcheck="false"></textarea><button class="btn pri" style="margin-top:12px;width:100%;justify-content:center;height:46px" onclick="run()">Verify in this browser</button></div>
+ <div class="card pan" id="out"><div class="dim">Load or paste a packet to verify it.</div></div></div></main>
+<script src="/app.js"></script><script src="/shared/keccak.js"></script><script src="/shared/beam-crypto.js"></script><script>chrome('/verify');
+let ST = null;
+async function byId() { const p = await api('/api/packet/' + $('tt').value + '/' + $('ss').value); if (p.error) return toast(p.error); show(p); }
+async function latest() { const d = await api('/api/packets?limit=1'); if (d.packets[0]) show(d.packets[0]); }
+function show(p) { const { status, tx, gas, round, trigger, hash, error, ...core } = p; $('pj').value = JSON.stringify(core, null, 1); $('tt').value = p.tunnelId; $('ss').value = p.seq; run(); }
+async function run() { let p; try { p = JSON.parse($('pj').value); } catch { return toast('That is not valid JSON'); } ST = ST || await api('/api/status');
+  const names = Object.fromEntries((await api('/api/validators')).validators.map((v) => [v.address.toLowerCase(), v.name])), t0 = performance.now(), r = BeamCrypto.verifyPacket(p, ST.validatorSet), ms = performance.now() - t0, pct = r.power / r.total * 100;
+  $('out').innerHTML = `<div class="eyebrow"><i></i>Result · computed locally in ${ms.toFixed(0)} ms</div><div class="verdict" style="margin-top:14px;color:${r.quorum ? 'var(--up)' : 'var(--dn)'}">${r.quorum ? 'Valid packet.' : 'Not valid.'}</div>
+   <div class="meter"><i style="width:${Math.min(100, pct)}%"></i><u></u></div><div class="mono dim" style="font-size:12px">${pct.toFixed(2)}% of stake signed · needs more than 66.67%</div>
+   <div class="kv"><div><b>tunnel</b>#${p.tunnelId} · seq ${p.seq} · ${new Date(p.ts * 1000).toLocaleString()}</div><div><b>receiver</b>${p.receiver} · chain ${p.chainId}</div><div><b>packet hash</b>${r.hash}</div><div><b>signed digest</b>${r.digest}</div></div>
+   <div style="margin-top:16px">${r.signers.map((s) => `<div class="sg"><span>${s.valid ? '✓' : '✗'} ${s.signer ? (names[s.signer.toLowerCase()] || 'unknown') + ' ' + short(s.signer) : 'unrecoverable'}</span><span class="dim">${s.power ? (s.power / r.total * 100).toFixed(2) + '%' : '0%'}</span></div>`).join('')}</div>
+   <div class="kv" style="margin-top:16px">${p.ids.map((id, i) => `<div><b>${id}</b>$${fp(Number(p.prices[i]) / 1e8)}</div>`).join('')}</div>`; }
+const q = new URLSearchParams(location.search); if (q.get('t')) { $('tt').value = q.get('t'); $('ss').value = q.get('s'); byId(); } else latest();
+</script></body></html>
