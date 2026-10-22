@@ -1,46 +1,68 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BEAM · The oracle network for Robinhood Chain</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css">
-<meta name="description" content="BEAM brings prices onto Robinhood Chain: many exchanges, many validators, one stake-weighted price, delivered on-chain with signatures anyone can verify.">
+<meta name="description" content="BEAM brings prices onto Robinhood Chain: eight exchanges, nine validators, one stake-weighted price, delivered on-chain with signatures anyone can verify.">
 <meta property="og:title" content="BEAM · The oracle network for Robinhood Chain"><meta property="og:image" content="/og.png"><meta name="twitter:card" content="summary_large_image">
 <style>
-.hero{position:relative;border-bottom:1px solid var(--rule);overflow:hidden}
-.hero .wrap{position:relative;z-index:2;padding-top:70px;padding-bottom:40px;pointer-events:none}.hero .wrap *{pointer-events:auto}
-.hero .h1{margin-top:22px;max-width:760px}.hero .lead{margin-top:24px}
-.hero .cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
-#prism{display:block;width:100%;height:440px;margin-top:-80px}
-.ca{display:inline-flex;align-items:center;gap:10px;margin-top:22px;border:1px solid var(--rule2);background:var(--paper);border-radius:999px;padding:6px 6px 6px 16px;font-family:var(--mono);font-size:12.5px}
-.ca button{border:0;background:var(--ink);color:var(--bg);border-radius:999px;height:28px;padding:0 12px;font-size:12px}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
-.step{padding:40px 26px 44px 0;border-right:1px solid var(--rule);position:relative}.step+.step{padding-left:26px}.step:last-child{border:0}
-.step .n{font-family:var(--mono);font-size:12px;color:var(--ink3)}.step h3{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1;margin:14px 0 12px}.step p{color:var(--ink2);font-size:15px}
-.step .bar{height:3px;width:52px;margin-top:22px}
-.sec{padding:80px 0 0}.sec .top{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:28px}
-.code{background:#0d0d12;color:#e8e6df;border-radius:4px;padding:26px 28px;font:13.5px/1.7 var(--mono);overflow:auto;white-space:pre}
-.code .k{color:#a78bfa}.code .s{color:#86efac}.code .c{color:#6b6a75}
-.two{display:grid;grid-template-columns:1fr 1.15fr;gap:46px;align-items:center}
-.vs{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule)}
-.vs div{padding:26px 22px 26px 0;border-bottom:1px solid var(--rule)}.vs div:nth-child(3n+2),.vs div:nth-child(3n+3){padding-left:22px;border-left:1px solid var(--rule)}
-.vs b{display:block;font-family:var(--serif);font-weight:400;font-size:28px;line-height:1.05;margin-bottom:8px}.vs span{color:var(--ink2);font-size:15px}
-@media(max-width:900px){.steps,.vs{grid-template-columns:1fr}.step,.step+.step{padding:28px 0;border-right:0;border-bottom:1px solid var(--rule)}.vs div,.vs div:nth-child(3n+2),.vs div:nth-child(3n+3){padding:22px 0;border-left:0}.two{grid-template-columns:1fr}#prism{height:300px;margin-top:-20px}}
+body{background:#04040a}
+.hero{position:relative;height:100vh;min-height:680px;overflow:hidden;margin-top:-64px}
+#lf{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero .ov{position:absolute;left:0;right:0;bottom:0;padding-bottom:7vh;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(4,4,10,.92) 8%,rgba(4,4,10,0))}
+.hero .ov *{pointer-events:auto}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(64px,10.5vw,172px);line-height:.84;letter-spacing:-.025em}
+.hero h1 em{font-style:italic;background:var(--spec);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 100%;animation:sh 8s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.hero .row{display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap;margin-top:26px}
+.hero .lead{font-size:18px;max-width:520px}
+.hero .cta{display:flex;gap:10px;flex-wrap:wrap}
+.live{display:inline-flex;align-items:center;gap:10px;font:12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-bottom:22px}
+.live b{color:var(--ink);font-weight:500}
+.ca{display:inline-flex;align-items:center;gap:10px;margin-top:18px;border:1px solid var(--rule2);background:rgba(255,255,255,.04);border-radius:999px;padding:5px 5px 5px 16px;font:12px var(--mono)}
+.ca button{border:0;background:var(--ink);color:#04040a;border-radius:999px;height:26px;padding:0 12px;font-size:12px}
+/* marquee */
+.mq{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);overflow:hidden;white-space:nowrap;background:rgba(255,255,255,.015)}
+.mq .tr{display:inline-flex;gap:0;animation:mq 70s linear infinite}.mq:hover .tr{animation-play-state:paused}
+.mq a{display:inline-flex;gap:10px;align-items:baseline;padding:16px 26px;border-right:1px solid var(--rule);font:13px var(--mono)}.mq a b{color:var(--ink);font-weight:500}.mq a span{color:var(--ink2)}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* scenes */
+.scene{padding:130px 0 40px;position:relative}
+.kick{font:11.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);display:flex;gap:12px;align-items:center}.kick i{width:30px;height:1px;background:var(--spec)}
+.big{font-family:var(--serif);font-weight:400;font-size:clamp(46px,6.4vw,104px);line-height:.9;letter-spacing:-.02em;margin-top:18px}.big em{font-style:italic;color:var(--ink2)}
+.sub{color:var(--ink2);font-size:18px;max-width:600px;margin-top:20px}
+.stage{position:relative;margin-top:44px;border:1px solid var(--rule);border-radius:6px;background:radial-gradient(800px 400px at 50% 0%,rgba(139,92,246,.07),transparent 70%),rgba(255,255,255,.012);overflow:hidden}
+#cs{display:block;width:100%;height:440px}
+.pick{display:flex;gap:6px;position:absolute;bottom:18px;right:18px;z-index:2}.pick button{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--rule2);background:rgba(4,4,10,.6);color:var(--ink2);font:12px var(--mono)}.pick button.on{background:var(--ink);color:#04040a}
+.cap{position:absolute;top:20px;left:22px;font:12px var(--mono);color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;z-index:2}
+/* signatures */
+.sw{display:grid;grid-template-columns:1.25fr 1fr;gap:0}
+.sigs{padding:26px 26px 22px;border-right:1px solid var(--rule)}
+.sg{display:grid;grid-template-columns:110px 1fr 70px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule);font:12.5px var(--mono)}
+.sg .h{color:var(--ink3);overflow:hidden;white-space:nowrap;text-overflow:clip}.sg .h.done{color:var(--ink2)}.sg .n{color:var(--ink)}.sg .p{text-align:right;color:var(--ink3)}.sg .p.ok{color:var(--up)}
+.verd{padding:30px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
+.verd .q{font-family:var(--serif);font-size:clamp(48px,5vw,76px);line-height:.95}
+.meter{height:12px;border-radius:6px;background:rgba(255,255,255,.06);position:relative;overflow:hidden}.meter i{position:absolute;inset:0 auto 0 0;width:0;background:var(--spec);transition:width .35s ease}.meter u{position:absolute;top:0;bottom:0;left:66.67%;width:2px;background:var(--ink)}
+.kvs{font:12px/1.9 var(--mono);color:var(--ink3);word-break:break-all}.kvs b{color:var(--ink2);font-weight:400}
+/* numbers */
+.nums{display:grid;grid-template-columns:repeat(4,1fr);margin-top:60px;border-top:1px solid var(--rule)}
+.nums div{padding:30px 20px 0 0}.nums b{display:block;font-family:var(--serif);font-weight:400;font-size:clamp(48px,6vw,88px);line-height:1}.nums span{font:11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.code{background:#07070f;border:1px solid var(--rule);color:#e8e6df;border-radius:6px;padding:26px 28px;font:13.5px/1.75 var(--mono);overflow:auto;white-space:pre}.code .k{color:#a78bfa}.code .s{color:#86efac}.code .c{color:#5b5a68}
+.two{display:grid;grid-template-columns:1fr 1.1fr;gap:56px;align-items:center}
+.end{text-align:center;padding:150px 0 40px}.end .big{font-size:clamp(56px,9vw,150px)}
+@media(max-width:900px){.sw,.two{grid-template-columns:1fr}.sigs{border-right:0;border-bottom:1px solid var(--rule)}.nums{grid-template-columns:1fr 1fr}#cs{height:360px}.sg{grid-template-columns:80px 1fr 56px}.hero .ov{padding-bottom:5vh}.pick{top:auto;bottom:14px;right:14px}}
 </style></head><body>
-<section class="hero"><div class="wrap">
-  <div class="eyebrow"><i></i>Oracle network · Robinhood Chain</div>
-  <h1 class="h1">Every price,<br><span class="it">in one</span> <span class="spec it">beam.</span></h1>
-  <p class="lead">BEAM pulls prices from eight exchanges and Wall Street feeds, has a validator set agree on each one, and delivers it to Robinhood Chain signed, so any contract can check it before it trusts it.</p>
-  <div class="cta"><a class="btn pri" href="/feeds">Explore live feeds</a><a class="btn" href="/tunnels">Open a tunnel</a><a class="btn" href="/docs">Read the docs</a></div>
-  <div id="cab"></div>
-</div><canvas id="prism"></canvas></section>
+<section class="hero"><canvas id="lf"></canvas><div class="ov"><div class="wrap">
+  <div class="live"><span class="dot"></span><span>Live · round <b id="rn">—</b> · <b id="nf">39</b> feeds · <b>9</b> validators</span></div>
+  <h1>Every price.<br>One <em>beam.</em></h1>
+  <div class="row"><p class="lead">Eight exchanges. Nine validators. One price they agree on, signed and delivered to Robinhood Chain, where any contract can check it before it trusts it.</p>
+  <div class="cta"><a class="btn pri" href="/feeds">Explore live feeds</a><a class="btn" href="/tunnels">Open a tunnel</a></div></div><div id="cab"></div></div></div></section>
+<div class="mq"><div class="tr" id="mq"></div></div>
 <main class="wrap">
-<div class="stats"><div class="stat"><div class="l"><span class="dot"></span>&nbsp; Round</div><div class="v" id="s1">—</div></div><div class="stat"><div class="l">Live feeds</div><div class="v" id="s2">—</div></div><div class="stat"><div class="l">Validators</div><div class="v" id="s3">—</div></div><div class="stat"><div class="l">Packets signed</div><div class="v" id="s4">—</div></div></div>
-<div class="steps">
-  <div class="step"><div class="n">01 · SOURCE</div><h3>Many exchanges.</h3><p>Each validator reads prices from its own mix of exchanges: Coinbase, Kraken, OKX, Gemini, Bitfinex, Binance.US, Crypto.com and Bitstamp, plus market data for stocks, FX and metals.</p><div class="bar" style="background:#7c3aed"></div></div>
-  <div class="step"><div class="n">02 · AGREE</div><h3>One price.</h3><p>Every round, each validator signs what it saw. The network takes the stake-weighted median, so no single exchange or validator can move a price.</p><div class="bar" style="background:#06b6d4"></div></div>
-  <div class="step"><div class="n">03 · SIGN</div><h3>Sealed with proof.</h3><p>Prices are packed into a packet and signed by the validators. More than two thirds of stake has to sign before a packet means anything.</p><div class="bar" style="background:#22c55e"></div></div>
-  <div class="step"><div class="n">04 · DELIVER</div><h3>On-chain.</h3><p>A tunnel carries packets to Robinhood Chain on your schedule, or the moment a price moves. The BeamReceiver contract checks every signature before it stores a thing.</p><div class="bar" style="background:#f97316"></div></div>
-</div>
-<section class="sec"><div class="top"><div><div class="eyebrow"><i></i>Live now</div><h2 class="h2" style="margin-top:14px">Prices, <span class="it">as agreed.</span></h2></div><a class="btn" href="/feeds">All feeds →</a></div>
-<div class="card"><table class="tbl"><thead><tr><th>Feed</th><th class="hm">Class</th><th class="r">Price</th><th class="r">24h</th><th class="r hm">Validators</th><th class="r hm">Last 6h</th></tr></thead><tbody id="ft"></tbody></table></div></section>
-<section class="sec"><div class="two"><div><div class="eyebrow"><i></i>For builders</div><h2 class="h2" style="margin-top:14px">Two lines <span class="it">to read a price.</span></h2><p class="lead" style="margin-top:18px;font-size:17px">Open a tunnel for the feeds you need, point it at a BeamReceiver, and read. Every stored price was signed by more than two thirds of validator stake, and you can check any packet yourself on the Verify page.</p><div class="cta" style="display:flex;gap:12px;margin-top:24px"><a class="btn pri" href="/tunnels">Open a tunnel</a><a class="btn" href="/contracts/BeamReceiver.sol">View contract</a></div></div>
+<section class="scene"><div class="kick"><i></i>01 · Consensus, live</div><h2 class="big">Nine opinions.<br><em>One price.</em></h2><p class="sub">This is the actual round that just happened. Each dot is a validator's signed submission, sized by its stake. The agreed price is where half the stake sits on either side, so no single exchange or validator can move it.</p>
+  <div class="stage"><div class="cap" id="ccap">Round —</div><div class="pick" id="pick"></div><canvas id="cs"></canvas></div></section>
+<section class="scene"><div class="kick"><i></i>02 · Proof, in your browser</div><h2 class="big">Don't trust it.<br><em>Check it.</em></h2><p class="sub">Below is the latest packet on its way to Robinhood Chain. Your browser is recovering every validator signature from it right now, with the same math the BeamReceiver contract runs on-chain.</p>
+  <div class="stage sw"><div class="sigs" id="sigs"></div><div class="verd"><div><div class="kick" id="pkh">Packet</div><div class="q" id="vq" style="margin-top:14px">Verifying…</div></div><div><div class="meter"><i id="vm"></i><u></u></div><div class="kvs" style="margin-top:10px" id="vp">0% of stake · quorum at 66.67%</div></div><div class="kvs" id="vk"></div><a class="btn" href="/verify" style="align-self:flex-start">Verify any packet →</a></div></div></section>
+<section class="scene"><div class="kick"><i></i>03 · The network</div><h2 class="big">Built for<br><em>Robinhood Chain.</em></h2><p class="sub">Tesla, NVIDIA and Robinhood sit beside BTC and ETH as first-class feeds, after-hours prints included. Tunnels push them on-chain on your heartbeat, or the moment a price moves.</p>
+  <div class="nums"><div><b id="n1">—</b><span>Rounds agreed</span></div><div><b id="n2">39</b><span>Live feeds</span></div><div><b>8</b><span>Exchanges read</span></div><div><b id="n4">—</b><span>Packets signed</span></div></div></section>
+<section class="scene"><div class="two"><div><div class="kick"><i></i>04 · For builders</div><h2 class="big" style="font-size:clamp(42px,5vw,80px)">Two lines.<br><em>Any price.</em></h2><p class="sub">Open a tunnel for the feeds you need, point it at a BeamReceiver and read. Every stored price was signed by more than two thirds of validator stake.</p><div style="display:flex;gap:10px;margin-top:26px;flex-wrap:wrap"><a class="btn pri" href="/tunnels">Open a tunnel</a><a class="btn" href="/docs">Read the docs</a></div></div>
 <div class="code"><span class="c">// read BEAM prices on Robinhood Chain</span>
 <span class="k">interface</span> IBeam {
   <span class="k">function</span> getPriceNoOlderThan(<span class="k">bytes32</span> id, <span class="k">uint256</span> maxAge)
@@ -49,30 +71,111 @@
 
 (<span class="k">int256</span> tsla, ) = IBeam(beam).getPriceNoOlderThan(
   <span class="s">"EQ:TSLA-USD"</span>, <span class="s">120</span>);   <span class="c">// 8 decimals</span></div></div></section>
-<section class="sec"><div class="eyebrow"><i></i>Why BEAM</div><h2 class="h2" style="margin:14px 0 30px">Built for <span class="it">Robinhood Chain.</span></h2>
-<div class="vs"><div><b>Stocks, natively.</b><span>Tesla, NVIDIA, Robinhood and the S&amp;P 500 sit next to BTC and ETH, as first-class feeds, including after-hours prints.</span></div><div><b>Nobody to trust.</b><span>A price lands only when validators holding more than two thirds of stake sign it. The contract checks; you don't have to.</span></div><div><b>Anyone can relay.</b><span>Packets are self-proving. Our relayer delivers them, and so can you, or anyone else.</span></div>
-<div><b>Push on your terms.</b><span>Tunnels update on a heartbeat, on a price move, or both. You choose the feeds, the interval and the threshold.</span></div><div><b>Open to inspect.</b><span>Every round, every validator submission and every signature is public in the explorer, as it happens.</span></div><div><b>Verify in a browser.</b><span>Paste any packet into Verify and your browser recomputes the hash and recovers every signer itself.</span></div></div></section>
+<section class="end"><div class="kick" style="justify-content:center"><i></i>Plug in<i></i></div><h2 class="big">Step into<br><em>the beam.</em></h2><div style="display:flex;gap:10px;justify-content:center;margin-top:34px;flex-wrap:wrap"><a class="btn pri" href="/feeds">Explore live feeds</a><a class="btn" href="/validators">Meet the validators</a></div></section>
 </main>
-<script src="/app.js"></script><script>chrome('/');
+<script src="/app.js"></script><script src="/shared/keccak.js"></script><script src="/shared/beam-crypto.js"></script><script>
+chrome('/');
 if (BEAM.ca) $('cab').innerHTML = `<div class="ca"><span>$BEAM</span><span>${BEAM.ca}</span><button onclick="navigator.clipboard.writeText(BEAM.ca);toast('Copied')">Copy</button></div>`;
-const SHOW = ['CS:BTC-USD', 'EQ:TSLA-USD', 'CS:ETH-USD', 'EQ:NVDA-USD', 'EQ:HOOD-USD', 'CM:XAU-USD', 'CS:SOL-USD', 'FX:EUR-USD'];
-let FEEDS = {};
-async function load() { const [st, f] = await Promise.all([api('/api/status'), api('/api/feeds')]); FEEDS = Object.fromEntries(f.feeds.map((x) => [x.id, x]));
-  $('s1').textContent = '#' + st.round.toLocaleString(); $('s2').textContent = st.signals; $('s3').textContent = st.validators; $('s4').textContent = st.packets.toLocaleString();
-  $('ft').innerHTML = SHOW.map((id) => FEEDS[id]).filter(Boolean).map((x) => `<tr onclick="location='/feed?id=${encodeURIComponent(x.id)}'" style="cursor:pointer"><td><b>${x.sym}</b> <span class="dim">${esc(x.name)}</span><div class="mono dim" style="font-size:11px">${x.id}</div></td><td class="hm"><span class="tag">${CLS[x.cls]}</span></td><td class="r num">$${fp(x.price)}</td><td class="r num ${x.chg >= 0 ? 'up' : 'dn'}">${fpct(x.chg)}</td><td class="r num hm">${x.n}/${st.validators}</td><td class="r hm">${sparkSvg(x.spark)}</td></tr>`).join(''); }
-load(); setInterval(load, 10000);
-// ---- the prism: white light in, live prices out ----
-const cv = $('prism'), g = cv.getContext('2d'), RAYS = [['#7c3aed', 'CS:BTC-USD'], ['#3b82f6', 'CS:ETH-USD'], ['#06b6d4', 'EQ:TSLA-USD'], ['#22c55e', 'EQ:NVDA-USD'], ['#eab308', 'EQ:HOOD-USD'], ['#f97316', 'CM:XAU-USD'], ['#ef4444', 'CS:SOL-USD']];
-function draw(t) { const W = cv.clientWidth, H = cv.clientHeight, dpr = devicePixelRatio || 1; if (cv.width !== W * dpr) { cv.width = W * dpr; cv.height = H * dpr; } g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
-  const mob = W < 700, px = mob ? W * .34 : W * .5, py = H * .58, s = mob ? 70 : 96, A = [px, py - s], B = [px + s * .9, py + s * .62], Cc = [px - s * .9, py + s * .62];
-  const inY = py + 8, inX = px - s * .45; g.lineWidth = 2.4; g.strokeStyle = '#0d0d12'; g.beginPath(); g.moveTo(0, inY - 60); g.lineTo(inX, inY); g.stroke();
-  for (let k = 0; k < 6; k++) { const f = ((t / 1600 + k / 6) % 1), x = f * inX, y = inY - 60 + 60 * f; g.fillStyle = '#0d0d12'; g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); }
-  const ox = px + s * .42, oy = py + 4, endX = W - (mob ? 8 : 40);
-  RAYS.forEach(([c, id], i) => { const ang = (-0.34 + i * (0.68 / (RAYS.length - 1))) * (mob ? 1.15 : 1), ex = endX, ey = oy + Math.tan(ang) * (ex - ox) * .9 + 20;
-    const gr = g.createLinearGradient(ox, oy, ex, ey); gr.addColorStop(0, c + '00'); gr.addColorStop(.25, c + 'cc'); gr.addColorStop(1, c); g.strokeStyle = gr; g.lineWidth = 2.2; g.beginPath(); g.moveTo(ox, oy); g.lineTo(ex, ey); g.stroke();
-    const f = (t / 2200 + i * .13) % 1; g.fillStyle = c; g.beginPath(); g.arc(ox + (ex - ox) * f, oy + (ey - oy) * f, 2.6, 0, 7); g.fill();
-    const fd = FEEDS[id]; if (fd && !mob) { const lx = ex - 190, ly = oy + (ey - oy) * ((lx - ox) / (ex - ox)) - 10; g.fillStyle = 'rgba(245,243,238,.92)'; g.fillRect(lx - 6, ly - 15, 196, 22); g.font = '600 12.5px "JetBrains Mono"'; g.fillStyle = c; g.fillText(fd.sym, lx, ly); g.fillStyle = '#0d0d12'; g.font = '500 12.5px "JetBrains Mono"'; g.fillText('$' + fp(fd.price), lx + 52, ly); } });
-  g.fillStyle = 'rgba(255,254,251,.94)'; g.strokeStyle = '#0d0d12'; g.lineWidth = 2.4; g.lineJoin = 'round'; g.beginPath(); g.moveTo(...A); g.lineTo(...B); g.lineTo(...Cc); g.closePath(); g.fill(); g.stroke();
-  requestAnimationFrame(draw); }
-requestAnimationFrame(draw); window.__draw = draw;
+const SPEC = ['#8b5cf6', '#6366f1', '#3b82f6', '#06b6d4', '#22c55e', '#eab308', '#f97316', '#ef4444'];
+const EXS = ['Coinbase', 'Kraken', 'OKX', 'Gemini', 'Bitfinex', 'Binance.US', 'Crypto.com', 'Bitstamp'];
+let FEEDS = [], ST = null, VALS = [], ROUND = 0, FIRE = 0, PACKS = [];
+// ================= HERO: the light field =================
+const cv = $('lf'), g = cv.getContext('2d'); let W = 0, H = 0, DPR = 1, MX = 0, MY = 0, TX = 0, TY = 0;
+const dust = Array.from({ length: 220 }, () => ({ x: Math.random(), y: Math.random(), z: Math.random(), s: Math.random() * 1.2 + .2 }));
+const parts = []; const rays = [];
+function size() { DPR = Math.min(devicePixelRatio || 1, 2); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * DPR; cv.height = H * DPR; }
+addEventListener('resize', size); addEventListener('mousemove', (e) => { TX = (e.clientX / innerWidth - .5); TY = (e.clientY / innerHeight - .5); });
+function geo() { const mob = W < 760; const cx = W * (mob ? .6 : .6) + MX * 18, cy = H * (mob ? .3 : .31) + MY * 12;
+  const src = EXS.map((n, i) => { const a = (-0.62 + i * (1.24 / 7)); return { n, x: (mob ? -W * .1 : W * .06) + Math.cos(a) * W * (mob ? .2 : .1) - MX * 30, y: cy + Math.sin(a) * H * (mob ? .2 : .21) - MY * 20, c: SPEC[i] }; });
+  return { mob, cx, cy, src, R: Math.min(W, H) * (mob ? .1 : .085), out: W + 40 }; }
+function bez(a, b, c, t) { const u = 1 - t; return u * u * a + 2 * u * t * b + t * t * c; }
+let last = performance.now();
+function frame(now) { const dt = Math.min(50, now - last) / 1000; last = now; MX += (TX - MX) * .04; MY += (TY - MY) * .04; const t = now / 1000, G = geo();
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.globalCompositeOperation = 'source-over'; g.fillStyle = 'rgba(4,4,10,.34)'; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'lighter';
+  for (const d of dust) { d.x -= .004 * dt * (d.z + .2); if (d.x < 0) d.x = 1; g.fillStyle = `rgba(200,200,255,${.06 + d.z * .22})`; g.fillRect(d.x * W - MX * 40 * d.z, d.y * H - MY * 30 * d.z, d.s, d.s); }
+  // source streams
+  for (const s of G.src) { const mx = (s.x + G.cx) / 2, my = s.y + (G.cy - s.y) * .15;
+    g.strokeStyle = s.c + '22'; g.lineWidth = 1; g.beginPath(); g.moveTo(s.x, s.y); g.quadraticCurveTo(mx, my, G.cx, G.cy); g.stroke();
+    if (Math.random() < 32 * dt) parts.push({ s, t: 0, v: .35 + Math.random() * .35, w: Math.random() * 1.6 + .6, mx, my });
+    g.fillStyle = s.c; g.beginPath(); g.arc(s.x, s.y, 3, 0, 7); g.fill(); g.fillStyle = s.c + '30'; g.beginPath(); g.arc(s.x, s.y, 9 + Math.sin(t * 2 + s.y) * 2, 0, 7); g.fill();
+    if (!G.mob) { g.globalCompositeOperation = 'source-over'; g.font = '11px "JetBrains Mono"'; g.fillStyle = 'rgba(243,241,236,.55)'; g.textAlign = 'right'; g.fillText(s.n.toUpperCase(), s.x - 16, s.y + 4); g.globalCompositeOperation = 'lighter'; } }
+  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.t += p.v * dt; if (p.t >= 1) { parts.splice(i, 1); continue; }
+    const x = bez(p.s.x, p.mx, G.cx, p.t), y = bez(p.s.y, p.my, G.cy, p.t), x2 = bez(p.s.x, p.mx, G.cx, Math.max(0, p.t - .05)), y2 = bez(p.s.y, p.my, G.cy, Math.max(0, p.t - .05));
+    g.strokeStyle = p.s.c; g.globalAlpha = .9 * Math.sin(p.t * Math.PI) + .1; g.lineWidth = p.w; g.beginPath(); g.moveTo(x2, y2); g.lineTo(x, y); g.stroke(); g.globalAlpha = 1; }
+  // output beam to Robinhood Chain
+  const by = G.cy, bx0 = G.cx + G.R * .6; for (let k = 0; k < 4; k++) { const gr = g.createLinearGradient(bx0, 0, W, 0); gr.addColorStop(0, `rgba(255,255,255,${.5 - k * .1})`); gr.addColorStop(1, `rgba(170,150,255,${.25 - k * .05})`); g.strokeStyle = gr; g.lineWidth = [1.6, 5, 12, 26][k]; g.globalAlpha = [1, .35, .14, .06][k]; g.beginPath(); g.moveTo(bx0, by); g.lineTo(W + 10, by); g.stroke(); }
+  g.globalAlpha = 1;
+  for (let i = PACKS.length - 1; i >= 0; i--) { const p = PACKS[i]; p.x += (W * .085) * dt * (G.mob ? .9 : 1); if (p.x > W + 200) { PACKS.splice(i, 1); continue; }
+    g.globalCompositeOperation = 'source-over'; const lbl = p.sym + '  $' + fp(p.price); g.font = '600 12px "JetBrains Mono"'; const tw = g.measureText(lbl).width + 22, yy = by + p.dy;
+    g.fillStyle = 'rgba(10,10,20,.82)'; g.strokeStyle = p.c; g.lineWidth = 1; g.beginPath(); g.roundRect(p.x, yy - 12, tw, 24, 12); g.fill(); g.stroke(); g.fillStyle = p.c; g.fillText(p.sym, p.x + 11, yy + 4); g.fillStyle = '#f3f1ec'; g.fillText('$' + fp(p.price), p.x + 11 + g.measureText(p.sym + '  ').width, yy + 4);
+    g.globalCompositeOperation = 'lighter'; g.strokeStyle = p.c + '55'; g.beginPath(); g.moveTo(p.x, yy); g.lineTo(p.x - 40, by); g.stroke(); }
+  // core
+  const pulse = Math.max(0, 1 - (now - FIRE) / 1400), R = G.R * (1 + pulse * .12);
+  for (let k = 5; k > 0; k--) { const rg = g.createRadialGradient(G.cx, G.cy, 0, G.cx, G.cy, R * k * .9); rg.addColorStop(0, `rgba(255,255,255,${.22 / k + pulse * .1})`); rg.addColorStop(.4, `rgba(150,120,255,${.1 / k})`); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.beginPath(); g.arc(G.cx, G.cy, R * k * .9, 0, 7); g.fill(); }
+  g.globalCompositeOperation = 'source-over'; g.fillStyle = '#05050c'; g.beginPath(); g.arc(G.cx, G.cy, R * .52, 0, 7); g.fill(); g.globalCompositeOperation = 'lighter';
+  g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.4; g.beginPath(); g.arc(G.cx, G.cy, R * .52, 0, 7); g.stroke();
+  // orbit rings
+  for (let r = 0; r < 3; r++) { g.save(); g.translate(G.cx, G.cy); g.rotate(t * (.12 + r * .07) * (r % 2 ? -1 : 1) + r); g.scale(1, .32 + r * .08); g.strokeStyle = `rgba(190,170,255,${.22 - r * .05})`; g.lineWidth = 1; g.setLineDash(r === 1 ? [3, 7] : []); g.beginPath(); g.arc(0, 0, R * (1.5 + r * .45), 0, 7); g.stroke(); g.restore(); } g.setLineDash([]);
+  // validators orbiting (pseudo-3D)
+  const nv = VALS.length || 9; for (let i = 0; i < nv; i++) { const a = t * .32 + i / nv * Math.PI * 2, rr = R * 2.1, x = G.cx + Math.cos(a) * rr, z = Math.sin(a), y = G.cy + z * rr * .34 - Math.cos(a) * 6, sz = 2.6 + (z + 1) * 1.6;
+    const fireAt = FIRE + i * 70, f = Math.max(0, 1 - Math.abs(now - fireAt - 140) / 260), c = SPEC[i % 8];
+    if (f > 0) { g.strokeStyle = c; g.globalAlpha = f; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x, y); g.lineTo(G.cx, G.cy); g.stroke(); g.globalAlpha = 1; }
+    g.fillStyle = c; g.globalAlpha = .5 + (z + 1) * .25; g.beginPath(); g.arc(x, y, sz + f * 3, 0, 7); g.fill(); g.globalAlpha = .18; g.beginPath(); g.arc(x, y, sz * 3.4, 0, 7); g.fill(); g.globalAlpha = 1;
+    if (!G.mob && VALS[i] && z > .55) { g.globalCompositeOperation = 'source-over'; g.font = '10.5px "JetBrains Mono"'; g.fillStyle = 'rgba(243,241,236,.6)'; g.textAlign = 'center'; g.fillText(VALS[i].name.toUpperCase(), x, y - 12); g.globalCompositeOperation = 'lighter'; } }
+  // shockwave on each round
+  if (pulse > 0) { g.strokeStyle = `rgba(255,255,255,${pulse * .5})`; g.lineWidth = 1.5; g.beginPath(); g.ellipse(G.cx, G.cy, R * (1 + (1 - pulse) * 5), R * (1 + (1 - pulse) * 5) * .42, 0, 0, 7); g.stroke(); }
+  // chain marker
+  g.globalCompositeOperation = 'source-over'; g.textAlign = 'right'; if (!G.mob) { g.font = '11px "JetBrains Mono"'; g.fillStyle = 'rgba(243,241,236,.55)'; g.fillText('→ ROBINHOOD CHAIN · 4663', W - 28, by - 20); }
+  g.textAlign = 'left'; requestAnimationFrame(frame); }
+size(); g.fillStyle = '#04040a'; g.fillRect(0, 0, W, H); requestAnimationFrame(frame);
+function emit() { const pool = FEEDS.filter((f) => f.price); if (!pool.length) return; const pick = ['CS:BTC-USD', 'EQ:TSLA-USD', 'CS:ETH-USD', 'EQ:NVDA-USD', 'EQ:HOOD-USD', 'CM:XAU-USD', 'CS:SOL-USD', 'EQ:AAPL-USD'];
+  pick.forEach((id, i) => { const f = FEEDS.find((x) => x.id === id); if (f) setTimeout(() => PACKS.push({ sym: f.sym, price: f.price, x: geo().cx + geo().R, dy: (i % 2 ? 1 : -1) * (26 + (i >> 1) * 22), c: SPEC[i % 8] }), i * 240); }); }
+// ================= data =================
+async function poll() { const [st, f] = await Promise.all([api('/api/status'), api('/api/feeds')]); ST = st; FEEDS = f.feeds;
+  if (st.round !== ROUND) { if (ROUND) { FIRE = performance.now(); emit(); consensus(); } ROUND = st.round; }
+  $('rn').textContent = '#' + st.round.toLocaleString(); $('nf').textContent = st.signals; $('n1').textContent = st.round.toLocaleString(); $('n4').textContent = st.packets.toLocaleString();
+  if (!$('mq').innerHTML) { const items = FEEDS.map((x) => `<a href="/feed?id=${encodeURIComponent(x.id)}"><b>${x.sym}</b><span>$${fp(x.price)}</span><span class="${x.chg >= 0 ? 'up' : 'dn'}">${fpct(x.chg)}</span></a>`).join(''); $('mq').innerHTML = items + items; } }
+(async () => { VALS = (await api('/api/validators')).validators; await poll(); FIRE = performance.now(); emit(); consensus(); setInterval(poll, 2500); })();
+// ================= SCENE 1: consensus =================
+const cs = $('cs'), c2 = cs.getContext('2d'); let CF = 'CS:BTC-USD', CD = null, CT0 = 0;
+const PICKS = [['CS:BTC-USD', 'BTC'], ['CS:ETH-USD', 'ETH'], ['EQ:TSLA-USD', 'TSLA'], ['EQ:NVDA-USD', 'NVDA'], ['CM:XAU-USD', 'GOLD']];
+$('pick').innerHTML = PICKS.map(([id, l]) => `<button data-id="${id}" onclick="CF='${id}';consensus()">${l}</button>`).join('');
+async function consensus() { const d = await api('/api/feed/' + encodeURIComponent(CF)); d.subs = d.subs.filter((s) => s.price != null).sort((a, b) => a.price - b.price); CD = d; CT0 = performance.now();
+  document.querySelectorAll('#pick button').forEach((b) => b.classList.toggle('on', b.dataset.id === CF)); $('ccap').textContent = d.id + ' · round #' + d.round; }
+function scene1(now) { const Wc = cs.clientWidth, Hc = cs.clientHeight, dpr = Math.min(devicePixelRatio || 1, 2); if (cs.width !== Wc * dpr) { cs.width = Wc * dpr; cs.height = Hc * dpr; }
+  c2.setTransform(dpr, 0, 0, dpr, 0, 0); c2.clearRect(0, 0, Wc, Hc); if (!CD || !CD.subs.length) return requestAnimationFrame(scene1);
+  const t = (now - CT0) / 1000, subs = CD.subs, med = CD.price, lo = Math.min(...subs.map((s) => s.price), med), hi = Math.max(...subs.map((s) => s.price), med), span = Math.max(hi - lo, med * .00025), pad = Wc < 700 ? 30 : 90;
+  const X = (p) => pad + (p - (lo - span * .15)) / (span * 1.3) * (Wc - pad * 2), axisY = Hc * .58, tot = subs.reduce((a, s) => a + s.stake, 0);
+  c2.strokeStyle = 'rgba(255,255,255,.12)'; c2.lineWidth = 1; c2.beginPath(); c2.moveTo(pad - 20, axisY); c2.lineTo(Wc - pad + 20, axisY); c2.stroke();
+  c2.font = '11px "JetBrains Mono"'; c2.fillStyle = 'rgba(243,241,236,.35)'; c2.textAlign = 'center'; for (let k = 0; k <= 4; k++) { const p = lo - span * .15 + span * 1.3 * k / 4; c2.fillText('$' + fp(p), X(p), axisY + 26); c2.fillRect(X(p), axisY - 3, 1, 6); }
+  let acc = 0; subs.forEach((s, i) => { const d0 = .25 + i * .18, k = Math.min(1, Math.max(0, (t - d0) / .7)), e = 1 - Math.pow(1 - k, 3); if (k <= 0) return;
+    const r = 5 + Math.sqrt(s.stake / tot) * 34, x = X(s.price), yT = axisY - 40 - (i % 3) * 46, y = -30 + (yT + 30) * e, c = SPEC[i % 8];
+    c2.globalCompositeOperation = 'lighter'; const rg = c2.createRadialGradient(x, y, 0, x, y, r * 2.6); rg.addColorStop(0, c + 'aa'); rg.addColorStop(1, c + '00'); c2.fillStyle = rg; c2.beginPath(); c2.arc(x, y, r * 2.6, 0, 7); c2.fill();
+    c2.globalCompositeOperation = 'source-over'; c2.fillStyle = c; c2.beginPath(); c2.arc(x, y, r * .45, 0, 7); c2.fill(); c2.strokeStyle = c + '66'; c2.setLineDash([2, 4]); c2.beginPath(); c2.moveTo(x, y + r * .45); c2.lineTo(x, axisY); c2.stroke(); c2.setLineDash([]);
+    if (e > .95) { c2.fillStyle = 'rgba(243,241,236,.75)'; c2.font = '10.5px "JetBrains Mono"'; c2.fillText(s.name.toUpperCase(), x, y - r * .45 - 8); } });
+  // cumulative stake bar
+  const tb = 2.2, kb = Math.min(1, Math.max(0, (t - tb) / 1.6)); const by = axisY + 60, bw = Wc - pad * 2; c2.fillStyle = 'rgba(255,255,255,.05)'; c2.fillRect(pad, by, bw, 8);
+  let a2 = 0; subs.forEach((s, i) => { const w = s.stake / tot * bw * kb; c2.fillStyle = SPEC[i % 8]; c2.fillRect(pad + a2, by, Math.max(0, w - 2), 8); a2 += s.stake / tot * bw * kb; });
+  c2.fillStyle = 'rgba(243,241,236,.9)'; c2.fillRect(pad + bw / 2 - 1, by - 6, 2, 20); c2.font = '10.5px "JetBrains Mono"'; c2.textAlign = 'center'; c2.fillStyle = 'rgba(243,241,236,.45)'; c2.fillText('50% OF STAKE', pad + bw / 2, by + 30);
+  // median drop
+  const km = Math.min(1, Math.max(0, (t - 3.9) / .5)); if (km > 0) { const x = X(med), e = 1 - Math.pow(1 - km, 3); c2.globalCompositeOperation = 'lighter';
+    for (let k = 3; k > 0; k--) { c2.strokeStyle = `rgba(255,255,255,${.5 / k})`; c2.lineWidth = k * 3; c2.beginPath(); c2.moveTo(x, 20); c2.lineTo(x, 20 + (axisY - 20) * e); c2.stroke(); }
+    c2.globalCompositeOperation = 'source-over'; c2.globalAlpha = e; c2.fillStyle = '#f3f1ec'; c2.font = (Wc < 700 ? 30 : 46) + 'px "Instrument Serif"'; c2.textAlign = x > Wc * .6 ? 'right' : 'left'; c2.fillText('$' + fp(med), x + (x > Wc * .6 ? -16 : 16), 64);
+    c2.font = '11px "JetBrains Mono"'; c2.fillStyle = 'rgba(243,241,236,.55)'; c2.fillText('AGREED · STAKE-WEIGHTED MEDIAN · ' + subs.length + ' VALIDATORS', x + (x > Wc * .6 ? -16 : 16), 86); c2.globalAlpha = 1; }
+  c2.textAlign = 'left'; requestAnimationFrame(scene1); }
+requestAnimationFrame(scene1);
+// ================= SCENE 2: signatures recovered in the browser =================
+async function sigScene() { const d = await api('/api/packets?limit=1'), p = d.packets[0]; if (!p || !ST) return setTimeout(sigScene, 3000);
+  const names = Object.fromEntries(VALS.map((v) => [v.address.toLowerCase(), v])), tot = Object.values(ST.validatorSet).reduce((a, b) => a + b, 0), dg = BeamCrypto.packetDigest(p);
+  $('pkh').innerHTML = `<i></i>Tunnel #${p.tunnelId} · packet #${p.seq} · ${p.ids.length} prices`; $('vq').textContent = 'Verifying…'; $('vq').style.color = 'var(--ink)'; $('vm').style.width = '0';
+  $('sigs').innerHTML = p.sigs.map((s, i) => `<div class="sg"><span class="n" id="sn${i}">signer ${i + 1}</span><span class="h" id="sh${i}">${s.slice(2, 60)}</span><span class="p" id="sp${i}">—</span></div>`).join('');
+  $('vk').innerHTML = `<b>digest</b> ${dg.slice(0, 34)}…<br><b>receiver</b> ${short(p.receiver)} · chain ${p.chainId}`;
+  let power = 0; for (let i = 0; i < p.sigs.length; i++) { const el = $('sh' + i); for (let k = 0; k < 8; k++) { el.textContent = Array.from({ length: 58 }, () => '0123456789abcdef'[Math.random() * 16 | 0]).join(''); await new Promise((r) => setTimeout(r, 35)); }
+    let a = null; try { a = BeamCrypto.recover(dg, p.sigs[i]); } catch {} const v = a && names[a.toLowerCase()]; el.textContent = a || 'invalid'; el.classList.add('done');
+    $('sn' + i).textContent = v ? v.name : '?'; const pw = v ? ST.validatorSet[a.toLowerCase()] : 0; power += pw; $('sp' + i).textContent = v ? '✓ ' + (pw / tot * 100).toFixed(1) + '%' : '✗'; $('sp' + i).classList.toggle('ok', !!v);
+    $('vm').style.width = (power / tot * 100) + '%'; $('vp').textContent = (power / tot * 100).toFixed(2) + '% of stake · quorum at 66.67%';
+    if (power * 3 > tot * 2 && $('vq').textContent === 'Verifying…') { $('vq').innerHTML = 'Quorum.<br><span style="color:var(--up)">Valid packet.</span>'; } }
+  setTimeout(sigScene, 9000); }
+const io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting && !sigScene.on) { sigScene.on = 1; sigScene(); } }, { threshold: .25 }); io.observe($('sigs').parentElement);
 </script></body></html>
