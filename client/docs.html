@@ -8,7 +8,7 @@
 .faq h3{font-family:var(--serif);font-weight:400;font-size:26px;margin-top:30px}
 @media(max-width:900px){.dl{grid-template-columns:1fr}.toc{position:static;grid-template-columns:1fr 1fr}}</style></head><body>
 <main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>Documentation</div><h1 class="h2">How the BEAM oracle <span class="it">works.</span></h1><p>Everything from where a price comes from to how a contract on Robinhood Chain reads it, with the exact encoding, so you can verify every step yourself.</p></section>
-<div class="dl"><nav class="toc"><a href="#overview">Overview</a><a href="#sources">Sources</a><a href="#rounds">Rounds &amp; the median</a><a href="#feeds">Feed IDs</a><a href="#packets">Packets</a><a href="#tunnels">Tunnels</a><a href="#contract">BeamReceiver</a><a href="#read">Reading prices</a><a href="#relay">Relaying</a><a href="#verify">Verifying</a><a href="#api">API</a><a href="#faq">FAQ</a></nav>
+<div class="dl"><nav class="toc"><a href="#overview">Overview</a><a href="#sources">Sources</a><a href="#rounds">Rounds &amp; the median</a><a href="#feeds">Feed IDs</a><a href="#packets">Packets</a><a href="#tunnels">Tunnels</a><a href="#contract">BeamReceiver</a><a href="#read">Reading prices</a><a href="#open">Open validators</a><a href="#relay">Relaying</a><a href="#verify">Verifying</a><a href="#api">API</a><a href="#faq">FAQ</a></nav>
 <article class="doc">
 <h2 id="overview">Overview</h2>
 <p>BEAM is the oracle network for Robinhood Chain. It answers one question for smart contracts: <em>what is this asset worth right now, and how do I know?</em></p>
@@ -53,6 +53,12 @@ digest = keccak256("\x19Ethereum Signed Message:\n32" ‖ packetHash)</pre>
 // a TSLA price no older than two minutes
 (int256 p, ) = IBeam(BEAM).getPriceNoOlderThan(bytes32("EQ:TSLA-USD"), 120);</pre>
 <p>Always use <code>getPriceNoOlderThan</code> in anything that moves money, with a <code>maxAge</code> that matches your tunnel's heartbeat.</p>
+<h2 id="open">Open validators</h2>
+<p>The BEAM validator set is permissionless. Next to the genesis validators, anyone can run an open validator:</p>
+<ul><li><b>In a browser tab:</b> the <a href="/run" style="color:var(--vio)">Run a validator</a> page creates a validator key locally, binds it to your wallet with one signature, and starts validating. Your browser reads Coinbase, Kraken, OKX, Gemini, Binance.US, Crypto.com and Bitstamp directly.</li>
+<li><b>Headless:</b> <code>OWNER_KEY=0x… node node/beam-node.js --name mynode --api https://… --stocks</code> runs the same validator 24/7 on any machine with Node.js. <code>--stocks</code> adds US equities, FX and metals.</li></ul>
+<p>Every round an open validator signs its own prices, which enter the stake-weighted median with its voting power. When a tunnel produces a packet, the packet stays open for co-signatures for four seconds: each open validator recomputes the packet hash itself, compares every price it can observe with its own view (within 1%), and signs only if it agrees. The finalized packet carries every signature, sorted by signer address, and its quorum is measured against the full active set, so validators that stay silent count against it.</p>
+<p>Accountability is automatic. A submission more than 1.5% from the agreed price is a strike; five strikes within 200 rounds jails the validator for 30 minutes. A validator is active while it keeps checking in, at most 45 seconds apart. One validator per wallet, and new validators per network are rate limited.</p>
 <h2 id="relay">Relaying</h2>
 <p>BEAM runs a relayer that submits packets for the BEAM receiver as they are signed. Relaying is open to anyone: take any packet from the API, ABI-encode <code>relay(tunnelId, seq, ts, ids, prices, sigs)</code> and send it. The contract does all the checking, so a relayer cannot alter a price; it can only deliver or not deliver. Running a second relayer is the simplest way to make delivery to your own contract independent of ours.</p>
 <h2 id="verify">Verifying</h2>
@@ -76,7 +82,7 @@ digest = keccak256("\x19Ethereum Signed Message:\n32" ‖ packetHash)</pre>
 <h3>Can the relayer change a price?</h3><p>No. The prices are inside the signed hash. Changing any byte breaks every signature and the contract rejects it, as you can confirm on the Verify page by editing a packet.</p>
 <h3>Can I use BEAM prices off-chain?</h3><p>Yes. The API is open, and every packet carries its own proof, so an off-chain system can verify it with the same code the Verify page uses.</p>
 <h3>What does a tunnel cost?</h3><p>Opening and running a tunnel is free today. Gas for on-chain delivery is paid by whoever relays.</p>
-<h3>How do validators join?</h3><p>The genesis set is listed on the Validators page with every address and its stake. Opening the set to outside operators, staked in $BEAM, is the next step on the roadmap.</p>
+<h3>How do validators join?</h3><p>Anyone can run an open validator from the Run a validator page or with the headless node. Open validators, the genesis set, their power, uptime and accuracy are all listed on the Validators page.</p>
 <h3>Where is the code?</h3><p>The contract and the verification library are served directly from this site. Links are in the footer.</p></section>
 </article></div></main>
 <script src="/app.js"></script><script>chrome('/docs');</script></body></html>

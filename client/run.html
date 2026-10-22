@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Run an oracle validator · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css">
+<meta name="description" content="Run a BEAM oracle validator from your browser. No server, no install, no permission. Your tab reads the exchanges, signs prices every round and co-signs the packets delivered to Robinhood Chain.">
+<style>
+.lay{display:grid;grid-template-columns:1.05fr 1fr;gap:22px;margin-top:30px;align-items:start}.pan{padding:26px}
+.steps{display:grid;gap:14px}.st{display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:start;padding:18px;border:1px solid var(--rule);border-radius:6px}.st.on{border-color:var(--rule2);background:rgba(255,255,255,.03)}.st.done{opacity:.6}
+.st .n{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--rule2);font:13px var(--mono)}.st.done .n{background:var(--up);color:#04040a;border-color:var(--up)}
+.st h3{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1}.st p{color:var(--ink2);font-size:14.5px;margin-top:6px}
+.orb{position:relative;height:300px;display:grid;place-items:center}#oc{position:absolute;inset:0;width:100%;height:100%}
+.orb .c{position:relative;text-align:center}.orb .c b{display:block;font-family:var(--serif);font-weight:400;font-size:64px;line-height:1}.orb .c span{font:11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}.kp div{padding:16px 0 16px 16px;border-left:1px solid var(--rule)}.kp div:first-child{border:0;padding-left:0}.kp b{display:block;font-family:var(--serif);font-weight:400;font-size:34px}.kp span{font:10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.log{font:12px/1.75 var(--mono);height:220px;overflow:auto;margin-top:16px;color:var(--ink2)}.log .round{color:#a78bfa}.log .sign{color:#34d399}.log .refuse{color:#facc15}.log .error{color:#fb7185}
+.ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.ex span{font:11px var(--mono);padding:4px 10px;border-radius:999px;border:1px solid var(--rule2);color:var(--ink3)}.ex span.ok{color:#34d399;border-color:rgba(52,211,153,.4)}
+.addr{font:12.5px var(--mono);word-break:break-all;color:var(--ink2);margin-top:8px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}.vs div{padding:20px;border:1px solid var(--rule);border-radius:6px}.vs b{display:block;font-family:var(--serif);font-weight:400;font-size:56px;line-height:1}.vs span{font:11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+@media(max-width:900px){.lay,.vs{grid-template-columns:1fr}.kp{grid-template-columns:1fr 1fr}.kp div:nth-child(3){border:0;padding-left:0}}
+</style></head><body>
+<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>Open validators · permissionless</div><h1 class="h2">Run the oracle <span class="it">from a browser tab.</span></h1><p>No server. No install. No one's permission. Your browser reads seven exchanges directly, signs its own prices every round, checks every packet against what it saw, and co-signs the ones it agrees with. Its signature travels with the packet to Robinhood Chain.</p>
+<div class="vs"><div><b id="sg">—</b><span>signers on the last oracle packet</span></div><div><b id="av">—</b><span>oracle validators active right now</span></div></div></section>
+<div class="lay"><div class="steps">
+ <div class="st on" id="s1"><div class="n">1</div><div><h3>Your validator key</h3><p>A fresh signing key is created in this browser and never leaves it. It signs prices and packets.</p><div class="addr" id="na"></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn sm" onclick="exportKey()">Back up key</button><button class="btn sm" onclick="importKey()">Import key</button></div></div></div>
+ <div class="st" id="s2"><div class="n">2</div><div><h3>Bind your wallet</h3><p>One validator per wallet. Your wallet signs a one-time join message: no transaction, no gas.</p><span class="lbl">Validator name</span><input class="in" id="nm" maxlength="24" placeholder="my-validator"><button class="btn pri" style="margin-top:12px" id="jb" onclick="joinNow()">Connect wallet &amp; join</button><div class="mono" style="font-size:12.5px;margin-top:10px" id="jm"></div></div></div>
+ <div class="st" id="s3"><div class="n">3</div><div><h3>Validate</h3><p>Every round your tab signs the prices it observed. Every packet it independently agrees with gets your signature. Keep the tab open to stay active; accuracy and uptime build your record.</p><button class="btn pri" style="margin-top:12px" id="gb" onclick="go()" disabled>Start validating</button></div></div>
+</div>
+<div class="card pan"><div class="orb"><canvas id="oc"></canvas><div class="c"><b id="ost">Idle</b><span id="osub">not validating</span></div></div>
+ <div class="kp"><div><b id="k1">0</b><span>Rounds signed</span></div><div><b id="k2">0</b><span>Packets co-signed</span></div><div><b id="k3">—</b><span>Uptime</span></div><div><b id="k4">0</b><span>Strikes</span></div></div>
+ <div class="lbl" style="margin-top:18px">Exchanges your tab reads</div><div class="ex" id="ex"></div><div class="log" id="lg"></div></div></div>
+</main>
+<script src="/app.js"></script><script src="/shared/keccak.js"></script><script src="/shared/beam-crypto.js"></script><script src="/shared/beam-node-core.js"></script><script>chrome('/run');
+let KEY = null, NODE = null, JOINED = false;
+try { KEY = localStorage.getItem('beam_node_key'); } catch {} if (!/^[0-9a-f]{64}$/.test(KEY || '')) { KEY = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, '0')).join(''); try { localStorage.setItem('beam_node_key', KEY); } catch {} }
+const ADDR = BeamCrypto.addressOf(KEY); $('na').textContent = 'validator ' + ADDR;
+$('ex').innerHTML = BeamNode.EXCHANGES.map((k) => `<span id="x_${k}">${k}</span>`).join('');
+function exportKey() { navigator.clipboard.writeText(KEY); toast('Validator key copied. Store it somewhere safe.'); }
+function importKey() { const k = (prompt('Paste a validator key (64 hex characters)') || '').trim().replace(/^0x/, ''); if (/^[0-9a-f]{64}$/i.test(k)) { localStorage.setItem('beam_node_key', k.toLowerCase()); location.reload(); } }
+function log(kind, msg) { const el = $('lg'), d = document.createElement('div'); d.className = kind; d.textContent = new Date().toLocaleTimeString() + '  ' + msg; el.prepend(d); while (el.children.length > 120) el.lastChild.remove(); if (kind === 'round' || kind === 'sign') PULSE = performance.now(); }
+function mk() { if (!NODE) NODE = BeamNode.Node({ api: location.origin, priv: KEY, log }); return NODE; }
+async function joinNow() { const a = await connect(); if (!a) return; $('jm').textContent = 'Sign the join message in your wallet…';
+  try { const r = await mk().join($('nm').value.trim() || 'node-' + ADDR.slice(2, 8), 'browser', { address: async () => a, sign: async (m) => signMsg(m) });
+    if (r.error) { $('jm').innerHTML = '<span class="dn">' + esc(r.error) + '</span>'; return; } joined(r.validator); } catch (e) { $('jm').innerHTML = '<span class="dn">Signature cancelled.</span>'; } }
+function joined(v) { JOINED = true; $('s1').className = 'st done'; $('s2').className = 'st done'; $('s3').className = 'st on'; $('gb').disabled = false; $('jm').innerHTML = '<span class="up">✓ Joined as ' + esc(v.name) + ' · voting power ' + v.power.toLocaleString() + '</span>'; $('nm').value = v.name; }
+async function go() { const n = mk(); $('gb').disabled = true; $('ost').textContent = 'Syncing'; $('osub').textContent = 'reading exchanges';
+  const v = await n.refresh(); for (const k of v.sources) $('x_' + k).classList.add('ok'); log('round', 'observing ' + Object.keys(v.prices).length + ' feeds from ' + v.sources.length + ' exchanges'); n.start(); RUN = true; $('s3').className = 'st done'; $('gb').textContent = 'Validating'; }
+// status
+let RUN = false, PULSE = 0;
+setInterval(async () => { const st = await api('/api/status'); $('sg').textContent = st.lastPacket ? st.lastPacket.signers : '—'; $('av').textContent = st.activeValidators;
+  if (NODE && NODE.st.me) { const m = NODE.st.me, s = NODE.st.stats; $('k1').textContent = s.submitted; $('k2').textContent = s.cosigned; $('k3').textContent = (m.uptime * 100).toFixed(1) + '%'; $('k4').textContent = m.strikes;
+    $('ost').textContent = m.jailed ? 'Jailed' : RUN ? 'Live' : 'Ready'; $('osub').textContent = m.jailed ? 'until ' + new Date(m.jailed).toLocaleTimeString() : RUN ? 'signing round #' + (NODE.st.lastN || '…') : 'press start'; } }, 2000);
+(async () => { const w = await api('/api/node/work?node=' + ADDR); if (w.me) { joined(w.me); log('round', 'welcome back, ' + w.me.name); } })();
+// orb
+const oc = $('oc'), og = oc.getContext('2d');
+function orb(t) { const W = oc.clientWidth, H = oc.clientHeight, d = Math.min(devicePixelRatio || 1, 2); if (oc.width !== W * d) { oc.width = W * d; oc.height = H * d; } og.setTransform(d, 0, 0, d, 0, 0); og.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, p = Math.max(0, 1 - (t - PULSE) / 1200), on = RUN ? 1 : .35; og.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 7; k++) { const a = t / 1000 * (.4 + k * .07) + k, r = 92 + k * 6; og.strokeStyle = ['#8b5cf6', '#3b82f6', '#06b6d4', '#22c55e', '#eab308', '#f97316', '#ef4444'][k]; og.globalAlpha = .35 * on; og.lineWidth = 1.4; og.beginPath(); og.ellipse(cx, cy, r, r * (.3 + .1 * Math.sin(a)), a * .3, 0, 7); og.stroke(); }
+  og.globalAlpha = 1; const rg = og.createRadialGradient(cx, cy, 0, cx, cy, 120 + p * 40); rg.addColorStop(0, `rgba(255,255,255,${.12 * on + p * .25})`); rg.addColorStop(1, 'rgba(0,0,0,0)'); og.fillStyle = rg; og.beginPath(); og.arc(cx, cy, 160, 0, 7); og.fill();
+  if (p > 0) { og.strokeStyle = `rgba(255,255,255,${p * .6})`; og.beginPath(); og.arc(cx, cy, 80 + (1 - p) * 70, 0, 7); og.stroke(); } og.globalCompositeOperation = 'source-over'; requestAnimationFrame(orb); }
+requestAnimationFrame(orb);
+</script></body></html>

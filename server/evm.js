@@ -33,5 +33,6 @@ async function sendTx(priv, { to, data, value = 0n, gas }, url = RPC) {
   return rpc('eth_sendRawTransaction', [raw], url); }
 async function receipt(hash, url = RPC, tries = 60) { for (let i = 0; i < tries; i++) { const r = await rpc('eth_getTransactionReceipt', [hash], url); if (r) return r; await new Promise((s) => setTimeout(s, 1000)); } return null; }
 async function call(to, data, url = RPC) { return rpc('eth_call', [{ to, data }, 'latest'], url); }
+const encSetValidators = (vals, powers) => '0x' + sel('setValidators(address[],uint256[])') + encCtor(vals, powers);
 const encGetPrice = (id) => '0x' + sel('getPrice(bytes32)') + C.idBytes32(id);
-module.exports = { rpc, sendTx, receipt, call, encRelay, encCtor, encGetPrice, sel, RPC };
+module.exports = { rpc, sendTx, receipt, call, encRelay, encCtor, encGetPrice, encSetValidators, sel, RPC };

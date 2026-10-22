@@ -37,3 +37,14 @@ It deploys with the live validator set from `DATA_PATH/beam.json`. Then set `BEA
 anvil --chain-id 4663 --port 8546 &
 node _studio/anvil-e2e.cjs   # deploy, relay real packets, read prices, reject tampered/under-signed/replayed packets
 ```
+
+## Open validators (permissionless)
+
+Anyone can run a BEAM oracle validator:
+
+- **Browser:** open `/run`, bind a wallet with one signature, press start. The tab reads 7 exchanges directly (CORS), signs prices every round and co-signs packets it independently agrees with.
+- **Headless:** `OWNER_KEY=0x... node node/beam-node.js --name mynode --api https://<site> --stocks`
+
+Open validators enter the stake-weighted median and co-sign packets during a 4 s collection window. Packet quorum is measured against the full active set. Strikes (>1.5% from the agreed price), 5 in 200 rounds → 30 min jail. One validator per wallet. With `BEAM_RELAYER_KEY` set and the relayer as receiver owner, the server keeps the on-chain validator set synced (`setValidators`) every 10 min.
+
+Tests: `_studio/anvil-e2e.cjs` (14 on-chain checks incl. open co-signing), `_studio/api-e2e.cjs`, `_studio/run-e2e.cjs` (browser validator).

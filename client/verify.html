@@ -12,9 +12,9 @@
 let ST = null;
 async function byId() { const p = await api('/api/packet/' + $('tt').value + '/' + $('ss').value); if (p.error) return toast(p.error); show(p); }
 async function latest() { const d = await api('/api/packets?limit=1'); if (d.packets[0]) show(d.packets[0]); }
-function show(p) { const { status, tx, gas, round, trigger, hash, error, ...core } = p; $('pj').value = JSON.stringify(core, null, 1); $('tt').value = p.tunnelId; $('ss').value = p.seq; run(); }
+let PSET = null; function show(p) { PSET = p.set || null; const { status, tx, gas, round, trigger, hash, error, set, signers, openSigners, power, total, digest, ...core } = p; $('pj').value = JSON.stringify(core, null, 1); $('tt').value = p.tunnelId; $('ss').value = p.seq; run(); }
 async function run() { let p; try { p = JSON.parse($('pj').value); } catch { return toast('That is not valid JSON'); } ST = ST || await api('/api/status');
-  const names = Object.fromEntries((await api('/api/validators')).validators.map((v) => [v.address.toLowerCase(), v.name])), t0 = performance.now(), r = BeamCrypto.verifyPacket(p, ST.validatorSet), ms = performance.now() - t0, pct = r.power / r.total * 100;
+  const names = Object.fromEntries([...(await api('/api/validators')).validators.map((v) => [v.address.toLowerCase(), v.name]), ...(await api('/api/nodes')).nodes.map((n) => [n.address, n.name + ' (open)'])]), t0 = performance.now(), r = BeamCrypto.verifyPacket(p, PSET || ST.validatorSet), ms = performance.now() - t0, pct = r.power / r.total * 100;
   $('out').innerHTML = `<div class="eyebrow"><i></i>Result · computed locally in ${ms.toFixed(0)} ms</div><div class="verdict" style="margin-top:14px;color:${r.quorum ? 'var(--up)' : 'var(--dn)'}">${r.quorum ? 'Valid packet.' : 'Not valid.'}</div>
    <div class="meter"><i style="width:${Math.min(100, pct)}%"></i><u></u></div><div class="mono dim" style="font-size:12px">${pct.toFixed(2)}% of stake signed · needs more than 66.67%</div>
    <div class="kv"><div><b>tunnel</b>#${p.tunnelId} · seq ${p.seq} · ${new Date(p.ts * 1000).toLocaleString()}</div><div><b>receiver</b>${p.receiver} · chain ${p.chainId}</div><div><b>packet hash</b>${r.hash}</div><div><b>signed digest</b>${r.digest}</div></div>

@@ -5,8 +5,8 @@ const E = require('./engine.js'), SRC = require('./sources.js'), C = require('..
 const PORT = +process.env.PORT || 8232, CLIENT = path.join(__dirname, '..', 'client'), ROOT = path.join(__dirname, '..');
 const RELAYER = process.env.BEAM_RELAYER_KEY ? String(process.env.BEAM_RELAYER_KEY).replace(/^0x/, '') : '';
 const EXPLORER = process.env.CHAIN_EXPLORER || 'https://explorer.mainnet.chain.robinhood.com';
-const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html' };
-const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol' };
+const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html' };
+const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/shared/beam-node-core.js': 'shared/beam-node-core.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol', '/node/beam-node.js': 'node/beam-node.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.sol': 'text/plain; charset=utf-8', '.json': 'application/json', '.mp4': 'video/mp4', '.ico': 'image/x-icon' };
 
 // ---------- relayer: pushes packets for the configured receiver to Robinhood Chain, one at a time ----------
@@ -17,6 +17,12 @@ async function pump() { if (relaying || !RQ.length) return; relaying = true; con
   catch (e) { p.status = 'failed'; p.error = String(e.message).slice(0, 120); relayStats.failed++; relayStats.error = p.error; }
   E.markDirty(); relaying = false; pump(); }
 
+// ---------- validator-set sync: keeps BeamReceiver's on-chain set equal to the active set (genesis + open validators) ----------
+let synced = '', syncStats = { last: null, tx: null, error: null, size: 0 };
+async function syncSet() { if (!RELAYER || E.RECEIVER === '0x0000000000000000000000000000000000000000') return; const set = E.vset(), keys = Object.keys(set).sort(), sig = keys.map((k) => k + ':' + set[k]).join(',');
+  if (sig === synced) return; try { const h = await V.sendTx(RELAYER, { to: E.RECEIVER, data: V.encSetValidators(keys, keys.map((k) => set[k])) }); const r = await V.receipt(h);
+    if (r && r.status === '0x1') { synced = sig; syncStats = { last: Date.now(), tx: h, error: null, size: keys.length }; } else syncStats.error = 'reverted (is the relayer the receiver owner?)'; } catch (e) { syncStats.error = String(e.message).slice(0, 120); } }
+setInterval(syncSet, +process.env.BEAM_SYNC_MS || 600000); setTimeout(syncSet, 20000);
 // ---------- views ----------
 const S = () => E.S();
 const SIG = Object.fromEntries(SRC.SIGNALS.map((s) => [s.id, s]));
@@ -25,8 +31,8 @@ function spark(id) { const now = Math.floor(Date.now() / 1000), h = (S().candles
 function feeds() { return SRC.SIGNALS.map((s) => { const p = E.LIVE.prices[s.id]; return { id: s.id, sym: s.sym, name: s.name, cls: s.cls, price: p ? p.price : null, ts: p ? p.ts : null, round: p ? p.round : null, n: p ? p.n : 0, power: p ? p.power : 0, spread: p ? p.spread : null, chg: chg24(s.id), spark: spark(s.id) }; }); }
 function validators() { const tot = S().validators.reduce((t, v) => t + v.stake, 0); return S().validators.map((v, i) => ({ rank: i + 1, name: v.name, address: v.address, stake: v.stake, power: v.stake / tot, sources: v.sources, rounds: v.rounds, missed: v.missed, uptime: v.rounds / Math.max(1, v.rounds + v.missed), dev: v.devN ? v.devSum / v.devN : null, since: v.since, live: !!E.LIVE.subs[v.address] })); }
 function status() { const st = S(); return { name: 'BEAM', chainId: E.CHAIN_ID, round: st.round, head: st.head, roundMs: E.ROUND_MS, genesis: st.genesis, validators: st.validators.length, signals: Object.keys(E.LIVE.prices).length, signalsTotal: SRC.SIGNALS.length,
-  sources: Object.fromEntries(Object.entries(SRC.STATE).map(([k, v]) => [k, { ok: v.ok, ts: v.ts, latency: v.latency, n: Object.keys(v.prices).length, err: v.err }])), receiver: E.RECEIVER, relayer: RELAYER ? C.addressOf(RELAYER) : null, relayStats, explorer: EXPLORER,
-  tunnels: Object.keys(st.tunnels).length, packets: Object.values(st.tunnels).reduce((t, x) => t + (x.packets || 0), 0), totalStake: st.validators.reduce((t, v) => t + v.stake, 0), validatorSet: Object.fromEntries(st.validators.map((v) => [v.address.toLowerCase(), v.stake])) }; }
+  sources: Object.fromEntries(Object.entries(SRC.STATE).map(([k, v]) => [k, { ok: v.ok, ts: v.ts, latency: v.latency, n: Object.keys(v.prices).length, err: v.err }])), receiver: E.RECEIVER, relayer: RELAYER ? C.addressOf(RELAYER) : null, relayStats, syncStats, explorer: EXPLORER,
+  tunnels: Object.keys(st.tunnels).length, packets: Object.values(st.tunnels).reduce((t, x) => t + (x.packets || 0), 0), totalStake: st.validators.reduce((t, v) => t + v.stake, 0), validatorSet: E.vset(), open: { active: E.activeOpen().length, registered: Object.keys(st.open || {}).length, power: E.OPEN_POWER }, activeValidators: Object.keys(E.vset()).length, lastPacket: (() => { const p = st.packets.find((x) => x.status === 'signed' || x.status === 'relayed'); return p ? { tunnelId: p.tunnelId, seq: p.seq, signers: p.signers || p.sigs.length, openSigners: p.openSigners || 0, power: p.power, total: p.total } : null; })() }; }
 const pubTunnel = (t) => ({ ...t, last: undefined });
 // ---------- tunnel creation: the owner signs a plain-text request with their EVM wallet ----------
 function parseReq(msg) { const o = {}; for (const line of String(msg).split('\n').slice(1)) { const i = line.indexOf(':'); if (i > 0) o[line.slice(0, i).trim()] = line.slice(i + 1).trim(); } return o; }
@@ -53,6 +59,11 @@ http.createServer(async (req, res) => { const u = new URL(req.url, 'http://x'), 
     if (p.startsWith('/api/feed/')) { const id = decodeURIComponent(p.slice(10)), s = SIG[id]; if (!s) return send(404, { error: 'unknown signal' }); const range = u.searchParams.get('range') || '1d', now = Math.floor(Date.now() / 1000), span = { '1h': 3600, '6h': 21600, '1d': 86400, '7d': 604800 }[range] || 86400;
       let cs = (S().candles[id] || []).filter((c) => c[0] >= now - span); if (span >= 604800) { const g = {}; for (const c of cs) { const k = c[0] - (c[0] % 1800); if (!g[k]) g[k] = [k, c[1], c[2], c[3], c[4]]; else { g[k][2] = Math.max(g[k][2], c[2]); g[k][3] = Math.min(g[k][3], c[3]); g[k][4] = c[4]; } } cs = Object.values(g); }
       return send(200, { ...feeds().find((f) => f.id === id), candles: cs, subs: S().validators.map((v) => ({ name: v.name, address: v.address, stake: v.stake, price: (E.LIVE.subs[v.address] || {})[id] ?? null, sources: v.sources })), sources: Object.fromEntries(SRC.SOURCES.map((k) => [k, SRC.read(k, s.sym) ?? null])) }); }
+    if (p === '/api/nodes') { const all = Object.values(S().open || {}).map(E.pubOpen).sort((a, b) => (b.active - a.active) || (b.rounds - a.rounds)); return send(200, { nodes: all, active: all.filter((x) => x.active).length, genesis: S().validators.length }); }
+    if (p === '/api/node/work') return send(200, E.work(u.searchParams.get('node'))), true;
+    if (p === '/api/node/join' && req.method === 'POST') { const r = E.joinOpen(await readBody(req), String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/node/submit' && req.method === 'POST') { const r = E.submitOpen(await readBody(req)); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/node/sign' && req.method === 'POST') { const r = E.signOpen(await readBody(req)); return send(r.error ? 400 : 200, r); }
     if (p === '/api/validators') return send(200, { validators: validators(), round: S().round });
     if (p === '/api/rounds') return send(200, { rounds: E.LIVE.rounds.slice(0, Math.min(100, +u.searchParams.get('limit') || 30)).map(({ subs, ...r }) => ({ ...r, subs: subs.length })) });
     if (p.startsWith('/api/round/')) { const r = E.LIVE.rounds.find((x) => x.n === +p.slice(11)); return r ? send(200, r) : send(404, { error: 'round not in the recent window' }); }
