@@ -129,3 +129,93 @@ Read one with getPriceNoOlderThan(). Two lines.
 
 beamprotocol.org/tunnels
 ```
+
+### 10. Live demo (video) · 190 chars · media: `beam-demo.mp4`
+```
+This is the $BEAM oracle, live.
+
+8 exchanges stream in. 9+ validators agree every 10 seconds. Your browser recovers every signature itself.
+
+No trust needed. Just check it.
+
+beamprotocol.org
+```
+
+### 11. Run a validator (video) · 214 chars · media: `beam-run.mp4`
+```
+Becoming an oracle validator on $BEAM takes 3 clicks:
+
+1. Open a tab
+2. Bind a wallet (no gas)
+3. Press start
+
+Your browser reads 7 exchanges and signs prices every round.
+
+You are the oracle.
+
+beamprotocol.org/run
+```
+
+### 12. Tunnel + verify (video) · 201 chars · media: `beam-tunnel.mp4`
+```
+Need prices in your Robinhood Chain app?
+
+Open a $BEAM tunnel: pick feeds, set a heartbeat, sign once. Signed packets start flowing.
+
+Then anyone can verify them in a browser.
+
+beamprotocol.org/tunnels
+```
+
+### 13. Tunnels · 204 chars · media: `beam-g08-tunnels.png`
+```
+Prices, delivered.
+
+A $BEAM tunnel is a standing order to the oracle: your feeds, a heartbeat, and a price-move trigger.
+
+Every update lands as a packet signed by the validators.
+
+beamprotocol.org/tunnels
+```
+
+### 14. Anyone can join · 221 chars · media: `beam-g09-anyone.png`
+```
+No whitelist. No gatekeeper.
+
+Anyone can run a $BEAM oracle validator. One wallet, one signature, one tab.
+
+Report bad prices and you get jailed automatically. Report good ones and you're the oracle.
+
+beamprotocol.org/run
+```
+
+### 15. Stocks · 210 chars · media: `beam-g10-stocks.png`
+```
+Wall Street closes at 4. The $BEAM oracle keeps reading.
+
+HOOD, TSLA, NVDA, AAPL, SPY and more, with pre-market and after-hours prints, timestamped for every contract on Robinhood Chain.
+
+beamprotocol.org/feeds
+```
+
+### 16. Code · 195 chars · media: `beam-g11-code.png`
+```
+Two lines. Any price.
+
+Read the $BEAM oracle from any contract on Robinhood Chain with getPriceNoOlderThan(id, maxAge).
+
+Stale data reverts, so it never touches your logic.
+
+beamprotocol.org/docs
+```
+
+### 17. Roadmap · 202 chars · media: `beam-g12-roadmap.png`
+```
+The $BEAM oracle, phase by phase:
+
+Live: 39 feeds, open validators, signed packets, tunnels
+Next: BeamReceiver on mainnet, $BEAM-weighted validators
+Then: staked slashing, custom feeds
+
+beamprotocol.org
+```

@@ -14,6 +14,64 @@ const T = [
   ['Thesis', 'beam-g06-thesis.png', "Robinhood Chain is bringing stocks on-chain. Nothing built on it works without an oracle.\n\n$BEAM is that oracle: open to any validator, built for tokenized stocks, verified on-chain.\n\nbeamprotocol.org"],
   ['Live numbers', 'beam-g07-numbers.png', "$BEAM oracle, live right now:\n\n39 feeds\n8 exchanges\n10 second rounds\n2/3+ stake to sign\nAnyone can run a validator\n\nWatch every round and signature: beamprotocol.org/explorer"],
   ['Builders', 'beam-keyart.png', "Building on Robinhood Chain?\n\nOpen a $BEAM tunnel: pick your feeds, a heartbeat and a price-move trigger. Signed prices land in your contract.\n\nRead one with getPriceNoOlderThan(). Two lines.\n\nbeamprotocol.org/tunnels"],
+  ['Live demo (video)', 'beam-demo.mp4', `This is the $BEAM oracle, live.
+
+8 exchanges stream in. 9+ validators agree every 10 seconds. Your browser recovers every signature itself.
+
+No trust needed. Just check it.
+
+beamprotocol.org`],
+  ['Run a validator (video)', 'beam-run.mp4', `Becoming an oracle validator on $BEAM takes 3 clicks:
+
+1. Open a tab
+2. Bind a wallet (no gas)
+3. Press start
+
+Your browser reads 7 exchanges and signs prices every round.
+
+You are the oracle.
+
+beamprotocol.org/run`],
+  ['Tunnel + verify (video)', 'beam-tunnel.mp4', `Need prices in your Robinhood Chain app?
+
+Open a $BEAM tunnel: pick feeds, set a heartbeat, sign once. Signed packets start flowing.
+
+Then anyone can verify them in a browser.
+
+beamprotocol.org/tunnels`],
+  ['Tunnels', 'beam-g08-tunnels.png', `Prices, delivered.
+
+A $BEAM tunnel is a standing order to the oracle: your feeds, a heartbeat, and a price-move trigger.
+
+Every update lands as a packet signed by the validators.
+
+beamprotocol.org/tunnels`],
+  ['Anyone can join', 'beam-g09-anyone.png', `No whitelist. No gatekeeper.
+
+Anyone can run a $BEAM oracle validator. One wallet, one signature, one tab.
+
+Report bad prices and you get jailed automatically. Report good ones and you're the oracle.
+
+beamprotocol.org/run`],
+  ['Stocks', 'beam-g10-stocks.png', `Wall Street closes at 4. The $BEAM oracle keeps reading.
+
+HOOD, TSLA, NVDA, AAPL, SPY and more, with pre-market and after-hours prints, timestamped for every contract on Robinhood Chain.
+
+beamprotocol.org/feeds`],
+  ['Code', 'beam-g11-code.png', `Two lines. Any price.
+
+Read the $BEAM oracle from any contract on Robinhood Chain with getPriceNoOlderThan(id, maxAge).
+
+Stale data reverts, so it never touches your logic.
+
+beamprotocol.org/docs`],
+  ['Roadmap', 'beam-g12-roadmap.png', `The $BEAM oracle, phase by phase:
+
+Live: 39 feeds, open validators, signed packets, tunnels
+Next: BeamReceiver on mainnet, $BEAM-weighted validators
+Then: staked slashing, custom feeds
+
+beamprotocol.org`],
 ];
 let md = `# BEAM X kit\n\n**Handle:** @BeamProtocolRH · **Site:** beamprotocol.org\n\n## Display name\n\`\`\`\n${NAME}\n\`\`\`\n\n## Bio (${BIO.length}/160)\n\`\`\`\n${BIO}\n\`\`\`\n\n## Website field\n\`\`\`\nbeamprotocol.org\n\`\`\`\n\n## DexScreener / listing description\n\`\`\`\n${DEX}\n\`\`\`\n\n## Profile images\n- Avatar: \`beam-pfp.png\`\n- Header: \`beam-banner.png\`\n\n## Tweets (all ≤245 characters)\n`;
 let bad = 0; T.forEach(([t, media, text], i) => { if (text.length > 245) { bad++; console.log('TOO LONG', t, text.length); } md += `\n### ${i + 1}. ${t} · ${text.length} chars · media: \`${media}\`\n\`\`\`\n${text}\n\`\`\`\n`; console.log(String(text.length).padStart(3), t); });

@@ -9,12 +9,12 @@ async function open(url, W, H, PORT) {
   const p = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((t) => t.type === 'page');
   const ws = new WebSocket(p.webSocketDebuggerUrl); await new Promise((res, rej) => { ws.addEventListener('open', res); ws.addEventListener('error', rej); });
   let id = 0; const pending = new Map();
-  ws.addEventListener('message', (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { const { resolve, reject } = pending.get(m.id); pending.delete(m.id); m.error ? reject(new Error(m.error.message)) : resolve(m.result); } });
+  const L = {}; ws.addEventListener('message', (e) => { const m = JSON.parse(e.data); if (m.method && L[m.method]) for (const f of L[m.method]) f(m.params); if (m.id && pending.has(m.id)) { const { resolve, reject } = pending.get(m.id); pending.delete(m.id); m.error ? reject(new Error(m.error.message)) : resolve(m.result); } });
   const send = (method, params = {}) => new Promise((resolve, reject) => { const mid = ++id; pending.set(mid, { resolve, reject }); ws.send(JSON.stringify({ id: mid, method, params })); });
   await send('Page.enable'); await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
   const ev = (expression) => send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }).then((r) => r.result && r.result.value);
   const shot = async (file, fmt = 'png') => { const s = await send('Page.captureScreenshot', { format: fmt, quality: 94 }); require('fs').writeFileSync(file, Buffer.from(s.data, 'base64')); };
-  return { send, ev, shot, close: () => { try { ws.close(); } catch {} chrome.kill(); } };
+  return { on: (k, f) => (L[k] = L[k] || []).push(f), send, ev, shot, close: () => { try { ws.close(); } catch {} chrome.kill(); } };
 }
 module.exports = { open, sleep };

@@ -42,7 +42,7 @@ function round() {
     const body = JSON.stringify({ n, ts, px: Object.keys(px).sort().map((k) => [k, Math.round(px[k] * SCALE)]) }), dg = C.personal(body);
     subs.push({ v, px, sig: C.sign('0x' + dg, v.priv), digest: dg }); v.rounds++; }
   for (const [a, sb] of Object.entries(PENDING.subs)) { const o = S.open[a]; if (!o || !isActive(o) || sb.n !== n) continue; subs.push({ v: o, px: sb.px, sig: sb.sig, digest: sb.digest, open: true }); o.rounds++; o.lastRound = n; }
-  for (const o of activeOpen()) if (!PENDING.subs[o.address] || PENDING.subs[o.address].n !== n) o.missed++;
+  for (const o of activeOpen()) if (o.rounds > 0 && (!PENDING.subs[o.address] || PENDING.subs[o.address].n !== n)) o.missed++; // uptime counts from a validator's first submission
   PENDING.subs = {};
   const total = subs.reduce((t, s) => t + s.v.stake, 0), prices = {};
   for (const sg of SRC.SIGNALS) { const pairs = subs.filter((s) => s.px[sg.id] != null).map((s) => [s.px[sg.id], s.v.stake]), pw = pairs.reduce((t, p) => t + p[1], 0);
