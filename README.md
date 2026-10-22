@@ -1,6 +1,6 @@
 # BEAM
 
-The oracle network for Robinhood Chain.
+The oracle for Robinhood Chain: a decentralized oracle network delivering signed prices on-chain.
 
 Validators read prices from eight exchanges (Coinbase, Kraken, OKX, Gemini, Bitfinex, Binance.US, Crypto.com, Bitstamp) plus market data for US equities, FX and commodities. Every 10 s each validator signs what it saw; the network takes the stake-weighted median. **Tunnels** package prices into packets signed by the validator set, and the **BeamReceiver** contract on Robinhood Chain stores a price only when signers hold more than two thirds of stake.
 

@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Docs · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><meta name="description" content="How BEAM works: sources, rounds, the stake-weighted median, packets, tunnels, the BeamReceiver contract and the API.">
+<title>Oracle docs · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><meta name="description" content="How BEAM works: sources, rounds, the stake-weighted median, packets, tunnels, the BeamReceiver contract and the API.">
 <style>.dl{display:grid;grid-template-columns:220px 1fr;gap:50px;margin-top:30px}.toc{position:sticky;top:90px;align-self:start;display:grid;gap:4px;font-size:14px}.toc a{color:var(--ink2);padding:4px 0}.toc a:hover{color:var(--ink)}
 .doc h2{font-family:var(--serif);font-weight:400;font-size:44px;line-height:1;margin:56px 0 16px;padding-top:20px;border-top:1px solid var(--rule)}.doc h2:first-child{margin-top:0;border:0;padding:0}.doc h3{font-size:19px;margin:26px 0 8px}
 .doc p,.doc li{color:var(--ink2);font-size:16.5px;line-height:1.7;max-width:760px}.doc p+p{margin-top:12px}.doc ul,.doc ol{padding-left:22px;margin:10px 0}.doc li{margin:6px 0}.doc code{font:14px var(--mono);background:rgba(255,255,255,.08);padding:1px 6px;border-radius:3px;color:var(--ink)}
@@ -7,11 +7,11 @@
 .doc table{border-collapse:collapse;margin:14px 0;font-size:14.5px;max-width:820px;width:100%}.doc td,.doc th{border-bottom:1px solid var(--rule);padding:9px 10px;text-align:left;vertical-align:top}.doc th{font:10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:400}
 .faq h3{font-family:var(--serif);font-weight:400;font-size:26px;margin-top:30px}
 @media(max-width:900px){.dl{grid-template-columns:1fr}.toc{position:static;grid-template-columns:1fr 1fr}}</style></head><body>
-<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>Documentation</div><h1 class="h2">How BEAM <span class="it">works.</span></h1><p>Everything from where a price comes from to how a contract on Robinhood Chain reads it, with the exact encoding, so you can verify every step yourself.</p></section>
+<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>Documentation</div><h1 class="h2">How the BEAM oracle <span class="it">works.</span></h1><p>Everything from where a price comes from to how a contract on Robinhood Chain reads it, with the exact encoding, so you can verify every step yourself.</p></section>
 <div class="dl"><nav class="toc"><a href="#overview">Overview</a><a href="#sources">Sources</a><a href="#rounds">Rounds &amp; the median</a><a href="#feeds">Feed IDs</a><a href="#packets">Packets</a><a href="#tunnels">Tunnels</a><a href="#contract">BeamReceiver</a><a href="#read">Reading prices</a><a href="#relay">Relaying</a><a href="#verify">Verifying</a><a href="#api">API</a><a href="#faq">FAQ</a></nav>
 <article class="doc">
 <h2 id="overview">Overview</h2>
-<p>BEAM is an oracle network for Robinhood Chain. It answers one question for smart contracts: <em>what is this asset worth right now, and how do I know?</em></p>
+<p>BEAM is the oracle network for Robinhood Chain. It answers one question for smart contracts: <em>what is this asset worth right now, and how do I know?</em></p>
 <p>A set of validators each read prices from their own mix of exchanges and market-data feeds. Every round they sign what they saw, and the network settles on one price per feed with a stake-weighted median. Tunnels package those prices into packets that the validators sign, and the BeamReceiver contract on Robinhood Chain accepts a packet only when the signers hold more than two thirds of total stake.</p>
 <p>The design follows the shape of modern oracle networks such as Band Protocol v3: validators submit price signals, the chain aggregates them, and a push model ("tunnels") delivers signed results to destination chains. BEAM is an independent implementation, built for Robinhood Chain and its tokenized stocks.</p>
 <h2 id="sources">Sources</h2>

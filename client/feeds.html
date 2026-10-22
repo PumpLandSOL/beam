@@ -1,8 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Price feeds · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><meta name="description" content="Every BEAM price feed: crypto, US equities, FX and commodities, agreed by the validator set every round.">
+<title>Oracle price feeds · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><meta name="description" content="Every BEAM price feed: crypto, US equities, FX and commodities, agreed by the validator set every round.">
 <style>.filters{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 16px;align-items:center}.filters button{height:36px;padding:0 15px;border-radius:999px;border:1px solid var(--rule2);background:none;font-size:13.5px;color:var(--ink2)}.filters button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .filters .in{max-width:260px;height:36px;margin-left:auto;border-radius:999px}</style></head><body>
-<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>Price feeds</div><h1 class="h2">Every feed, <span class="it">live.</span></h1><p>Each price is the stake-weighted median of what every validator saw this round. Click any feed for its chart, the per-validator submissions and the raw exchange quotes behind it.</p></section>
+<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>Oracle price feeds</div><h1 class="h2">Every feed, <span class="it">live.</span></h1><p>Each oracle price is the stake-weighted median of what every validator saw this round. Click any feed for its chart, the per-validator submissions and the raw exchange quotes behind it.</p></section>
 <div class="filters" id="fl"></div>
 <div class="card"><table class="tbl"><thead><tr><th>Feed</th><th class="hm">Class</th><th class="r">Price</th><th class="r">24h</th><th class="r hm">Spread</th><th class="r hm">Validators</th><th class="r hm">Updated</th><th class="r hm">Last 6h</th></tr></thead><tbody id="ft"></tbody></table></div></main>
 <script src="/app.js"></script><script>chrome('/feeds');
