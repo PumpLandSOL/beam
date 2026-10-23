@@ -260,3 +260,16 @@ Build the oracle. Get on the board.
 
 beamprotocol.org/season
 ```
+
+### 21. BEAM Stream (video) · 243 chars · media: `beam-stream-16s.mp4`
+```
+New: BEAM Stream.
+
+One line of code puts live $BEAM oracle prices on any website. Crypto, US stocks, FX and gold, updated every 10 second round.
+
+Builders get the raw real-time stream too.
+
+The oracle, on every website.
+
+beamprotocol.org/embed
+```

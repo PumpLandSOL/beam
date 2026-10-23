@@ -5,7 +5,7 @@ const E = require('./engine.js'), SRC = require('./sources.js'), C = require('..
 const PORT = +process.env.PORT || 8232, CLIENT = path.join(__dirname, '..', 'client'), ROOT = path.join(__dirname, '..');
 const RELAYER = process.env.BEAM_RELAYER_KEY ? String(process.env.BEAM_RELAYER_KEY).replace(/^0x/, '') : '';
 const EXPLORER = process.env.CHAIN_EXPLORER || 'https://explorer.mainnet.chain.robinhood.com';
-const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html' };
+const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html', '/embed': 'embed.html' };
 const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/shared/beam-node-core.js': 'shared/beam-node-core.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol', '/node/beam-node.js': 'node/beam-node.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.sol': 'text/plain; charset=utf-8', '.json': 'application/json', '.mp4': 'video/mp4', '.ico': 'image/x-icon' };
 
@@ -48,7 +48,7 @@ function feeds() { return SRC.SIGNALS.map((s) => { const p = E.LIVE.prices[s.id]
 function validators() { const tot = S().validators.reduce((t, v) => t + v.stake, 0); return S().validators.map((v, i) => ({ rank: i + 1, name: v.name, address: v.address, stake: v.stake, power: v.stake / tot, sources: v.sources, rounds: v.rounds, missed: v.missed, uptime: v.rounds / Math.max(1, v.rounds + v.missed), dev: v.devN ? v.devSum / v.devN : null, since: v.since, live: !!E.LIVE.subs[v.address] })); }
 function status() { const st = S(); return { name: 'BEAM', chainId: E.CHAIN_ID, round: st.round, head: st.head, roundMs: E.ROUND_MS, genesis: st.genesis, validators: st.validators.length, signals: Object.keys(E.LIVE.prices).length, signalsTotal: SRC.SIGNALS.length,
   sources: Object.fromEntries(Object.entries(SRC.STATE).map(([k, v]) => [k, { ok: v.ok, ts: v.ts, latency: v.latency, n: Object.keys(v.prices).length, err: v.err }])), receiver: E.RECEIVER, relayer: RELAYER ? C.addressOf(RELAYER) : null, relayStats, syncStats, deployStats, explorer: EXPLORER,
-  tunnels: Object.keys(st.tunnels).length, packets: Object.values(st.tunnels).reduce((t, x) => t + (x.packets || 0), 0), totalStake: st.validators.reduce((t, v) => t + v.stake, 0), validatorSet: E.vset(), open: { active: E.activeOpen().length, registered: Object.keys(st.open || {}).length, power: E.OPEN_POWER }, activeValidators: Object.keys(E.vset()).length, lastPacket: (() => { const p = st.packets.find((x) => x.status === 'signed' || x.status === 'relayed'); return p ? { tunnelId: p.tunnelId, seq: p.seq, signers: p.signers || p.sigs.length, openSigners: p.openSigners || 0, power: p.power, total: p.total } : null; })() }; }
+  streamClients: STREAM.size, tunnels: Object.keys(st.tunnels).length, packets: Object.values(st.tunnels).reduce((t, x) => t + (x.packets || 0), 0), totalStake: st.validators.reduce((t, v) => t + v.stake, 0), validatorSet: E.vset(), open: { active: E.activeOpen().length, registered: Object.keys(st.open || {}).length, power: E.OPEN_POWER }, activeValidators: Object.keys(E.vset()).length, lastPacket: (() => { const p = st.packets.find((x) => x.status === 'signed' || x.status === 'relayed'); return p ? { tunnelId: p.tunnelId, seq: p.seq, signers: p.signers || p.sigs.length, openSigners: p.openSigners || 0, power: p.power, total: p.total } : null; })() }; }
 const pubTunnel = (t) => ({ ...t, last: undefined });
 // ---------- tunnel creation: the owner signs a plain-text request with their EVM wallet ----------
 function parseReq(msg) { const o = {}; for (const line of String(msg).split('\n').slice(1)) { const i = line.indexOf(':'); if (i > 0) o[line.slice(0, i).trim()] = line.slice(i + 1).trim(); } return o; }
@@ -66,6 +66,12 @@ async function toggleTunnel(b) { const msg = String(b.message || ''); let owner;
   const m = /^BEAM tunnel (pause|resume) #(\d+) at (\d+)$/.exec(msg); if (!m || Math.abs(Date.now() / 1000 - +m[3]) > 900) return { error: 'bad or expired request' };
   const t = S().tunnels[m[2]]; if (!t) return { error: 'unknown tunnel' }; if (t.owner.toLowerCase() !== owner.toLowerCase()) return { error: 'only the owner can do that' }; if (m[1] === 'resume') { const g = await G.check(owner, G.TUNNEL_MIN); if (!g.ok) return { error: 'Tunnels require you to ' + g.error, gate: g }; t.gated = false; } t.active = m[1] === 'resume'; E.markDirty(); return { tunnel: pubTunnel(t) }; }
 
+// ---------- BEAM Stream: every finalized round pushed over server-sent events ----------
+const STREAM = new Set(); let lastStreamed = 0;
+function frame(ids) { const r = E.LIVE.rounds[0]; const px = {}; for (const [id, p] of Object.entries(E.LIVE.prices)) if (!ids || ids.has(id)) px[id] = { price: p.price, ts: p.ts, n: p.n, chg: chg24(id) };
+  return { round: S().round, head: S().head, ts: Date.now(), signers: r ? r.subs.length : 0, prices: px }; }
+setInterval(() => { if (S().round === lastStreamed) return; lastStreamed = S().round; for (const c of STREAM) { try { c.res.write('event: round\ndata: ' + JSON.stringify(frame(c.ids)) + '\n\n'); } catch {} } }, 500);
+setInterval(() => { for (const c of STREAM) { try { c.res.write(': ping\n\n'); } catch {} } }, 25000);
 // ---------- http ----------
 const readBody = (req) => new Promise((ok, no) => { let d = ''; req.on('data', (c) => { d += c; if (d.length > 1e5) req.destroy(); }); req.on('end', () => { try { ok(d ? JSON.parse(d) : {}); } catch (e) { no(e); } }); });
 http.createServer(async (req, res) => { const u = new URL(req.url, 'http://x'), p = u.pathname;
@@ -93,6 +99,10 @@ http.createServer(async (req, res) => { const u = new URL(req.url, 'http://x'), 
     if (p.startsWith('/api/tunnel/')) { const t = S().tunnels[p.slice(12)]; if (!t) return send(404, { error: 'unknown tunnel' }); return send(200, { tunnel: pubTunnel(t), packets: S().packets.filter((x) => x.tunnelId === t.id).slice(0, 50) }); }
     if (p === '/api/packets') { const tid = +u.searchParams.get('tunnel') || 0; return send(200, { packets: S().packets.filter((x) => !tid || x.tunnelId === tid).slice(0, Math.min(100, +u.searchParams.get('limit') || 25)) }); }
     if (p.startsWith('/api/packet/')) { const [tid, seq] = p.slice(12).split('/').map(Number), pk = S().packets.find((x) => x.tunnelId === tid && x.seq === seq); return pk ? send(200, pk) : send(404, { error: 'packet not in the recent window' }); }
+    if (p === '/api/stream') { if (STREAM.size >= 2000) return send(503, { error: 'stream full, retry shortly' });
+      const ids = u.searchParams.get('feeds') ? new Set(u.searchParams.get('feeds').split(',').map((x) => x.trim()).filter((x) => SIG[x])) : null;
+      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive', 'access-control-allow-origin': '*', 'x-accel-buffering': 'no' });
+      const c = { res, ids }; STREAM.add(c); res.write('retry: 3000\nevent: round\ndata: ' + JSON.stringify(frame(ids)) + '\n\n'); req.on('close', () => STREAM.delete(c)); return; }
     if (p.startsWith('/api/')) return send(404, { error: 'unknown endpoint' });
     let f = ROUTES[p] ? path.join(CLIENT, ROUTES[p]) : FILES[p] ? path.join(ROOT, FILES[p]) : path.join(CLIENT, path.normalize(p).replace(/^([/\\])+/, ''));
     if (!f.startsWith(CLIENT) && !FILES[p]) return send(403, { error: 'forbidden' });
