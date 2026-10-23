@@ -353,13 +353,13 @@ The $BEAM oracle is fully running on-chain. Validator-signed prices land in Beam
 https://explorer.mainnet.chain.robinhood.com/address/0x113ec1c595efc6be4185ef69565250a9cb767e72
 ```
 
-### 28. On-chain page (video) · 252 chars · media: `beam-onchain-15s.mp4`
+### 28. On-chain page (video) · 233 chars · media: `beam-onchain-15s.mp4`
 ```
 New: beamprotocol.org/onchain
 
 Your browser reads every $BEAM oracle price straight from the BeamReceiver contract on Robinhood Chain. No BEAM server in between.
 
-39 feeds on-chain. Every update verified by the contract.
+Every update verified by the contract.
 
 Fully running. Fully on-chain.
 ```
