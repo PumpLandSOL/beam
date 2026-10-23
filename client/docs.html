@@ -42,6 +42,7 @@ digest = keccak256("\x19Ethereum Signed Message:\n32" ‖ packetHash)</pre>
 <h2 id="contract">BeamReceiver</h2>
 <p>The contract stores the validator set (address and voting power) and the latest price per feed. <code>relay()</code> is permissionless:</p>
 <ol><li>It recomputes the packet hash and the signed digest.</li><li>It recovers each signer with <code>ecrecover</code>, requires strictly increasing addresses and sums their power.</li><li>It requires that the signing power is more than two thirds of total power, that <code>seq</code> is greater than the tunnel's last sequence, and that the timestamp is not in the future.</li><li>It stores each price, never overwriting a newer price with an older one.</li></ol>
+<p><b>Deployed on Robinhood Chain (chain ID 4663):</b> <a href="https://explorer.mainnet.chain.robinhood.com/address/0x113ec1c595efc6be4185ef69565250a9cb767e72" target="_blank" rel="noopener" style="color:var(--vio)"><code>0x113ec1c595efc6be4185ef69565250a9cb767e72</code></a>. The BEAM relayer delivers signed Beam Core packets to it every 30 minutes, and any contract can read the latest price with <code>getPriceNoOlderThan(id, maxAge)</code>.</p>
 <p>Source: <a href="/contracts/BeamReceiver.sol" style="color:var(--vio)">BeamReceiver.sol</a>. A relay of four prices with nine signatures costs about 307k gas.</p>
 <h2 id="read">Reading prices</h2>
 <pre>interface IBeam {

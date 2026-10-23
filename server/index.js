@@ -14,7 +14,7 @@ const RQ = []; let relaying = false, relayStats = { sent: 0, failed: 0, last: nu
 const RELAY_EVERY = +process.env.BEAM_RELAY_EVERY_MS || 1800000; let lastRelay = 0; // one on-chain update per window keeps gas small
 E.onPacket = (p) => { if (RELAYER && E.RECEIVER !== '0x0000000000000000000000000000000000000000' && p.receiver === E.RECEIVER && Date.now() - lastRelay >= RELAY_EVERY) { lastRelay = Date.now(); p.status = 'queued'; RQ.push(p); pump(); } };
 async function pump() { if (relaying || !RQ.length) return; relaying = true; const p = RQ.shift();
-  try { if (RQ.length > 20) { p.status = 'skipped'; } else { const h = await V.sendTx(RELAYER, { to: p.receiver, data: V.encRelay(p) }); p.tx = h; p.status = 'relaying'; const r = await V.receipt(h); p.status = r && r.status === '0x1' ? 'relayed' : 'failed'; if (r) p.gas = parseInt(r.gasUsed); relayStats.sent++; relayStats.last = Date.now(); } }
+  try { if (RQ.length > 20) { p.status = 'skipped'; } else { const h = await V.sendTx(RELAYER, { to: p.receiver, data: V.encRelay(p) }); p.tx = h; relayStats.tx = h; p.status = 'relaying'; const r = await V.receipt(h); p.status = r && r.status === '0x1' ? 'relayed' : 'failed'; if (r) p.gas = parseInt(r.gasUsed); relayStats.sent++; relayStats.last = Date.now(); } }
   catch (e) { p.status = 'failed'; p.error = String(e.message).slice(0, 120); relayStats.failed++; relayStats.error = p.error; }
   E.markDirty(); relaying = false; pump(); }
 

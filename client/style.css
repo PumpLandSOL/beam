@@ -47,3 +47,10 @@ textarea.in{height:auto;padding:12px 14px;line-height:1.5}
 
 .card{backdrop-filter:blur(8px)}select.in option{background:#0b0b14}::selection{background:rgba(139,108,255,.4)}
 .btn:hover{background:var(--ink);color:#04040a}
+
+.livebar{border-bottom:1px solid var(--rule);background:linear-gradient(90deg,rgba(139,92,246,.10),rgba(6,182,212,.06),rgba(34,197,94,.08));font:500 12px var(--mono);letter-spacing:.06em}
+.livebar .wrap{display:flex;gap:22px;align-items:center;justify-content:center;padding-top:8px;padding-bottom:8px;flex-wrap:wrap}
+.livebar span{color:var(--ink2)}.livebar a{color:var(--ink);text-decoration:none}.livebar a:hover{text-decoration:underline}
+.livebar i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:8px;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:lbp 2s infinite;vertical-align:1px}
+@keyframes lbp{70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+@media(max-width:700px){.livebar .lb-x{display:none}}
