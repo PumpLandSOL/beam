@@ -364,11 +364,11 @@ Every update verified by the contract.
 Fully running. Fully on-chain.
 ```
 
-### 29. Hype: permissionless vs Chainlink (video) · 248 chars · media: `beam-features-26s.mp4`
+### 29. Hype: permissionless vs Chainlink (video) · 238 chars · media: `beam-features-26s.mp4`
 ```
 Chainlink picks who signs its prices.
 
-$BEAM lets anyone holding $BEAM sign them. Open a tab, press start, and your signature rides into BeamReceiver on Robinhood Chain.
+$BEAM lets any holder sign them. Open a tab, press start, and your signature rides into BeamReceiver on Robinhood Chain.
 
 No whitelist. Running right now. Check the chain.
 
