@@ -343,3 +343,13 @@ Tokenized stocks trade 24/7, so they need prices 24/7. $BEAM reads pre-market an
 
 Wall Street sleeps. The oracle doesn't.
 ```
+
+### 27. Live on-chain · 240 chars · media: `beam-keyart.png`
+```
+$BEAM is live on Robinhood Chain.
+
+BeamReceiver is deployed. Validator-signed oracle prices for crypto, US stocks, FX and gold now land on-chain, and any contract can read them.
+
+Check it yourself:
+0x113ec1c595efc6be4185ef69565250a9cb767e72
+```
