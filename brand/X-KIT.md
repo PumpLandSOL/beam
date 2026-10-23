@@ -273,3 +273,16 @@ The oracle, on every website.
 
 beamprotocol.org/embed
 ```
+
+### 22. Permissionless vs Chainlink (video) · 236 chars · media: `beam-permissionless-18s.mp4`
+```
+To run a Chainlink price feed node, you apply and wait to be approved.
+
+To run a $BEAM oracle validator, you hold $BEAM and open a browser tab.
+
+No whitelist. No gatekeeper. No approval.
+
+The permissionless oracle.
+
+beamprotocol.org/run
+```
