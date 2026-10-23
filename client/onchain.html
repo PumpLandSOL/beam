@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>On-chain · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><meta name="description" content="Every BEAM oracle price, read straight from the BeamReceiver contract on Robinhood Chain by your own browser.">
+<style>.vs{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px}.vs div{padding:20px;border:1px solid var(--rule);border-radius:6px}.vs b{display:block;font-family:var(--serif);font-weight:400;font-size:48px;line-height:1}.vs span{font:11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.lay3{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;margin-top:26px}.pan{padding:22px 24px}.ok{color:#34d399}.tx a{color:var(--ink);text-decoration:none}.tx a:hover{text-decoration:underline}
+.how{font:12.5px/1.7 var(--mono);color:var(--ink2);background:rgba(255,255,255,.03);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;margin-top:12px;word-break:break-all}
+@media(max-width:900px){.vs{grid-template-columns:1fr 1fr}.lay3{grid-template-columns:1fr}}</style></head><body>
+<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>On-chain · read by your browser</div><h1 class="h2">Straight from <span class="it">the chain.</span></h1><p>Every number on this page is read by your own browser directly from the BeamReceiver contract on Robinhood Chain through the public RPC. Nothing passes through BEAM's servers. Next to each on-chain price is the live oracle price, so you can see them agree.</p>
+<div class="vs"><div><b id="k1">—</b><span>feeds stored on-chain</span></div><div><b id="k2">—</b><span>validators in the contract</span></div><div><b id="k3">—</b><span>on-chain updates</span></div><div><b id="k4">—</b><span>Robinhood Chain block</span></div></div>
+<div class="how" id="how">contract —</div></section>
+<div class="lay3"><div class="card"><table class="tbl"><thead><tr><th>Feed</th><th class="r">On-chain price</th><th class="r hm">Live oracle</th><th class="r hm">Diff</th><th class="r">Age</th></tr></thead><tbody id="pt"><tr><td colspan="5" class="dim" style="padding:24px">Reading the contract…</td></tr></tbody></table></div>
+ <div class="card pan"><div class="lbl">Latest on-chain updates</div><p class="dim" style="font-size:13.5px;margin-top:6px">Each row is a <code>Relayed</code> event: a packet of validator-signed prices the contract verified and stored.</p><div id="ev" class="tx" style="margin-top:12px"></div></div></div></main>
+<script src="/app.js"></script><script src="/shared/keccak.js"></script><script src="/shared/beam-crypto.js"></script><script>chrome('/onchain');
+const RPC = 'https://rpc.mainnet.chain.robinhood.com', K = BeamCrypto.keccak, sel = (s) => K(s).slice(0, 8), FROM = 95796230;
+let RCV = null, EXP = BEAM.chain.explorer, FEEDS = [];
+async function rpc(batch) { const r = await fetch(RPC, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(batch) }); const j = await r.json(); return Array.isArray(j) ? j.sort((a, b) => a.id - b.id) : j; }
+const call = (id, data) => ({ jsonrpc: '2.0', id, method: 'eth_call', params: [{ to: RCV, data }, 'latest'] });
+const word = (h, i) => BigInt('0x' + h.slice(2 + 64 * i, 66 + 64 * i)), signed = (v) => (v >= 2n ** 255n ? v - 2n ** 256n : v);
+const age = (s) => s < 90 ? Math.round(s) + 's' : s < 5400 ? Math.round(s / 60) + 'm' : (s / 3600).toFixed(1) + 'h';
+const money = (v) => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: v >= 1 ? 2 : 6 });
+async function load() {
+  const [st, fd] = await Promise.all([api('/api/status'), api('/api/feeds')]); FEEDS = fd.feeds; RCV = st.receiver; EXP = st.explorer || EXP;
+  if (!RCV || /^0x0+$/.test(RCV)) { $('pt').innerHTML = '<tr><td colspan="5" class="dim" style="padding:24px">BeamReceiver is not deployed yet.</td></tr>'; return; }
+  $('how').innerHTML = `contract <a href="${EXP}/address/${RCV}" target="_blank" rel="noopener" style="color:var(--ink)">${RCV} ↗</a><br>rpc ${RPC} · chain 4663<br>call getPrice(bytes32 id) → (int256 price, uint64 ts), 8 decimals`;
+  const batch = FEEDS.map((f, i) => call(i, '0x' + sel('getPrice(bytes32)') + BeamCrypto.idBytes32(f.id).replace(/^0x/, '')));
+  batch.push(call(900, '0x' + sel('validatorCount()')), { jsonrpc: '2.0', id: 901, method: 'eth_blockNumber', params: [] });
+  const res = await rpc(batch), by = Object.fromEntries(res.map((r) => [r.id, r])), now = Date.now() / 1000; let n = 0;
+  $('pt').innerHTML = FEEDS.map((f, i) => { const r = by[i]; if (!r || !r.result || r.result.length < 130) return ''; n++;
+    const p = Number(signed(word(r.result, 0))) / 1e8, ts = Number(word(r.result, 1)), live = f.price, d = live ? (p - live) / live * 100 : null;
+    return `<tr><td><b>${f.sym}</b> <span class="mono dim" style="font-size:11px">${f.id}</span></td><td class="r num"><b>${money(p)}</b></td><td class="r num hm dim">${live ? money(live) : '—'}</td><td class="r num hm ${d != null && Math.abs(d) < 1 ? 'ok' : 'dim'}">${d == null ? '—' : (d >= 0 ? '+' : '') + d.toFixed(2) + '%'}</td><td class="r num">${age(now - ts)}</td></tr>`; }).join('');
+  $('k1').textContent = n; $('k2').textContent = by[900] && by[900].result ? Number(BigInt(by[900].result)) : '—'; $('k4').textContent = by[901] ? Number(BigInt(by[901].result)).toLocaleString('en-US') : '—';
+  const topic = '0x' + K('Relayed(uint64,uint64,uint64,uint256,uint256,address)');
+  const lg = await rpc({ jsonrpc: '2.0', id: 1, method: 'eth_getLogs', params: [{ address: RCV, fromBlock: '0x' + FROM.toString(16), toBlock: 'latest', topics: [topic] }] });
+  const logs = (lg.result || []).reverse(); $('k3').textContent = logs.length;
+  $('ev').innerHTML = logs.slice(0, 12).map((l) => { const seq = Number(word(l.data, 0)), ts = Number(word(l.data, 1)), sig = Number(word(l.data, 2));
+    return `<div style="padding:10px 0;border-top:1px solid var(--rule)"><div style="display:flex;justify-content:space-between"><span class="mono" style="font-size:13px">packet #${seq} · ${sig} prices</span><span class="mono dim" style="font-size:12px">${age(now - ts)} ago</span></div><div class="mono" style="font-size:11.5px;margin-top:4px"><a href="${EXP}/tx/${l.transactionHash}" target="_blank" rel="noopener">${l.transactionHash.slice(0, 18)}…${l.transactionHash.slice(-8)} ↗</a> <span class="ok">✓ verified on-chain</span></div></div>`; }).join('') || '<div class="dim">No on-chain updates yet.</div>'; }
+load().catch((e) => { $('pt').innerHTML = '<tr><td colspan="5" class="dim" style="padding:24px">Could not reach Robinhood Chain RPC: ' + esc(String(e.message || e)) + '</td></tr>'; }); setInterval(() => load().catch(() => {}), 30000);
+</script></body></html>
