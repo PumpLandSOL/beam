@@ -304,3 +304,42 @@ $BEAM, the oracle for Robinhood Chain: TBD
 
 beamprotocol.org
 ```
+
+### 24. Potential · 221 chars · media: `beam-g16-every-chain.png`
+```
+Every chain crowns one oracle.
+
+Ethereum: Chainlink
+Solana: Pyth
+Robinhood Chain: $BEAM
+
+Every lending market, perp and vault on tokenized stocks will need a price feed. We built it for this chain first.
+
+beamprotocol.org
+```
+
+### 25. Potential · 193 chars · media: `beam-g17-flywheel.png`
+```
+The $BEAM flywheel:
+
+More apps on Robinhood Chain
+→ more oracle tunnels (250k $BEAM each)
+→ more validators (1M $BEAM each)
+→ a stronger oracle
+→ more apps
+
+Usage needs $BEAM.
+
+beamprotocol.org
+```
+
+### 26. Potential · 226 chars · media: `beam-g18-24-7.png`
+```
+Wall Street closes at 4.
+
+Robinhood Chain never closes.
+
+Tokenized stocks trade 24/7, so they need prices 24/7. $BEAM reads pre-market and after-hours prints and timestamps every price.
+
+Wall Street sleeps. The oracle doesn't.
+```
