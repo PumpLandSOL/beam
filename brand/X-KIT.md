@@ -375,18 +375,19 @@ No whitelist. Running right now. Check the chain.
 The permissionless oracle.
 ```
 
-### 30. Day one checklist · 269 chars · media: `beam-g20-day-one.png`
+### 30. Day one checklist · 240 chars (X-weighted) · media: `beam-g20-day-one.png`
 ```
-Day one checklist for $BEAM:
+$BEAM day one:
 
 ✅ BeamReceiver live on Robinhood Chain
 ✅ 39 oracle feeds
-✅ 10s rounds, 8 exchanges
-✅ Open validators from a browser tab
+✅ Open validators from a tab
 ✅ Oracle tunnels
 ✅ Packet verifier
 ✅ Round explorer
 ✅ On-chain page
 ✅ BEAM Stream
 ✅ Oracle Season 1
+
+All shipped. All verifiable.
 ```
