@@ -5,7 +5,7 @@ const E = require('./engine.js'), SRC = require('./sources.js'), C = require('..
 const PORT = +process.env.PORT || 8232, CLIENT = path.join(__dirname, '..', 'client'), ROOT = path.join(__dirname, '..');
 const RELAYER = process.env.BEAM_RELAYER_KEY ? String(process.env.BEAM_RELAYER_KEY).replace(/^0x/, '') : '';
 const EXPLORER = process.env.CHAIN_EXPLORER || 'https://explorer.mainnet.chain.robinhood.com';
-const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html', '/embed': 'embed.html', '/onchain': 'onchain.html' };
+const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html', '/embed': 'embed.html', '/onchain': 'onchain.html', '/status': 'status.html' };
 const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/shared/beam-node-core.js': 'shared/beam-node-core.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol', '/node/beam-node.js': 'node/beam-node.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.sol': 'text/plain; charset=utf-8', '.json': 'application/json', '.mp4': 'video/mp4', '.ico': 'image/x-icon' };
 
