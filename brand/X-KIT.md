@@ -364,14 +364,13 @@ Every update verified by the contract.
 Fully running. Fully on-chain.
 ```
 
-### 29. Hype: live + permissionless vs Chainlink (video) · 232 chars · media: `beam-features-26s.mp4`
+### 29. Hype: permissionless vs Chainlink (video) · 248 chars · media: `beam-features-26s.mp4`
 ```
-$BEAM is live on Robinhood Chain.
+Chainlink picks who signs its prices.
 
-Chainlink: apply, get approved, maybe sign.
-BEAM: hold $BEAM, open a tab, sign.
+$BEAM lets anyone holding $BEAM sign them. Open a tab, press start, and your signature rides into BeamReceiver on Robinhood Chain.
 
-Validator-signed prices, verified on-chain by BeamReceiver. No whitelist. No gatekeeper.
+No whitelist. Running right now. Check the chain.
 
 The permissionless oracle.
 ```
