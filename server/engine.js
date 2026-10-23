@@ -19,7 +19,11 @@ function fresh() {
 try { fs.mkdirSync(DATA, { recursive: true }); } catch {}
 try { S = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { S = fresh(); }
 if (RECEIVER === '0x0000000000000000000000000000000000000000' && S.receiver) RECEIVER = S.receiver; // auto-deployed receiver persists in the data file
-S.open = S.open || {}; // permissionless validators: address -> record
+S.open = S.open || {};
+const SEASON_END = Date.parse(process.env.BEAM_SEASON_END || '2026-12-31T23:59:59Z');
+S.season = S.season || { n: 1, start: Date.now(), pts: {} };
+function award(owner, kind, n) { if (!owner || owner === 'beam' || Date.now() > SEASON_END) return; const a = String(owner).toLowerCase(), p = S.season.pts[a] || (S.season.pts[a] = { validate: 0, cosign: 0, tunnel: 0, total: 0, first: Date.now() }); p[kind] += n; p.total += n; p.last = Date.now(); }
+const pmult = (o) => (o.power || OPEN_POWER) / OPEN_POWER; // permissionless validators: address -> record
 let dirty = true; const save = () => { if (!dirty) return; try { fs.writeFileSync(FILE + '.tmp', JSON.stringify(S)); fs.renameSync(FILE + '.tmp', FILE); dirty = false; } catch (e) { console.error('save failed', e.message); } };
 setInterval(save, 15000);
 
@@ -43,7 +47,7 @@ function round() {
   for (const v of S.validators) { const px = validatorSubmit(v); if (!Object.keys(px).length) { v.missed++; continue; }
     const body = JSON.stringify({ n, ts, px: Object.keys(px).sort().map((k) => [k, Math.round(px[k] * SCALE)]) }), dg = C.personal(body);
     subs.push({ v, px, sig: C.sign('0x' + dg, v.priv), digest: dg }); v.rounds++; }
-  for (const [a, sb] of Object.entries(PENDING.subs)) { const o = S.open[a]; if (!o || !isActive(o) || sb.n !== n) continue; subs.push({ v: o, px: sb.px, sig: sb.sig, digest: sb.digest, open: true }); o.rounds++; o.lastRound = n; }
+  for (const [a, sb] of Object.entries(PENDING.subs)) { const o = S.open[a]; if (!o || !isActive(o) || sb.n !== n) continue; subs.push({ v: o, px: sb.px, sig: sb.sig, digest: sb.digest, open: true }); o.rounds++; o.lastRound = n; award(o.owner, 'validate', 10 * pmult(o)); }
   for (const o of activeOpen()) if (o.rounds > 0 && (!PENDING.subs[o.address] || PENDING.subs[o.address].n !== n)) o.missed++; // uptime counts from a validator's first submission
   PENDING.subs = {};
   const total = subs.reduce((t, s) => t + s.v.stake, 0), prices = {};
@@ -77,7 +81,7 @@ setInterval(() => { const now = Date.now(); for (let i = PENDING.packets.length 
 function tunnels(ts) { for (const t of Object.values(S.tunnels)) { if (!t.active) continue;
     const due = ts - (t.lastTs || 0) >= t.interval, moved = t.last && t.signals.some((id) => LIVE.prices[id] && t.last[id] && Math.abs(LIVE.prices[id].price - t.last[id]) / t.last[id] * 1e4 >= t.deviationBps);
     if (!due && !(moved && ts - (t.lastTs || 0) >= 10)) continue; const p = makePacket(t, ts); if (!p) continue;
-    p.trigger = due ? 'interval' : 'deviation'; t.seq = p.seq; t.lastTs = ts; t.last = Object.fromEntries(p.ids.map((id, i) => [id, +p.prices[i] / SCALE])); t.packets = (t.packets || 0) + 1;
+    p.trigger = due ? 'interval' : 'deviation'; t.seq = p.seq; t.lastTs = ts; t.last = Object.fromEntries(p.ids.map((id, i) => [id, +p.prices[i] / SCALE])); t.packets = (t.packets || 0) + 1; award(t.owner, 'tunnel', 2);
     S.packets.unshift(p); if (S.packets.length > 1500) S.packets.length = 1500; PENDING.packets.push(p); } }
 function createTunnel(o) { const id = ++S.tunnelSeq; const t = { id, name: String(o.name || 'Tunnel ' + id).replace(/[<>]/g, '').slice(0, 40), owner: o.owner, signals: o.signals, interval: o.interval, deviationBps: o.deviationBps,
   receiver: (o.receiver || RECEIVER).toLowerCase(), chainId: CHAIN_ID, created: Math.floor(Date.now() / 1000), active: true, seq: 0, lastTs: 0, packets: 0 }; S.tunnels[id] = t; dirty = true; return t; }
@@ -116,7 +120,10 @@ function submitOpen(b) { const a = String(b.node || '').toLowerCase(), o = S.ope
 function signOpen(b) { const a = String(b.node || '').toLowerCase(), o = S.open[a]; if (!o || !isActive(o)) return { error: 'validator not active' };
   const p = PENDING.packets.find((x) => x.tunnelId === +b.tunnelId && x.seq === +b.seq); if (!p) return { error: 'packet already finalized' };
   let r; try { r = C.recover(p.digest, b.sig).toLowerCase(); } catch { return { error: 'bad signature' }; } if (r !== a) return { error: 'signature does not match validator' };
-  p.cosig[a] = b.sig; o.signed++; o.lastSeen = Date.now(); return { ok: true }; }
+  p.cosig[a] = b.sig; o.signed++; award(o.owner, 'cosign', 5 * pmult(o)); o.lastSeen = Date.now(); return { ok: true }; }
 function start() { backfill().catch(() => {}); SRC.start(); setTimeout(function tick() { try { round(); } catch (e) { console.error('round', e); } setTimeout(tick, ROUND_MS); }, 6000); }
+function season(wallet) { const rows = Object.entries(S.season.pts).map(([a, p]) => ({ wallet: a, ...p, total: Math.round(p.total), validate: Math.round(p.validate), cosign: Math.round(p.cosign), tunnel: Math.round(p.tunnel) })).sort((x, y) => y.total - x.total);
+  rows.forEach((x, i) => { x.rank = i + 1; }); const me = wallet ? rows.find((x) => x.wallet === String(wallet).toLowerCase()) || null : undefined;
+  return { season: S.season.n, start: S.season.start, end: SEASON_END, live: Date.now() <= SEASON_END, players: rows.length, points: rows.reduce((t, x) => t + x.total, 0), rules: { validate: 10, cosign: 5, tunnel: 2, maxMult: 4 }, top: rows.slice(0, 100), me }; }
 function setReceiver(a) { RECEIVER = String(a).toLowerCase(); S.receiver = RECEIVER; for (const t of Object.values(S.tunnels)) if (t.owner === 'beam') t.receiver = RECEIVER; module.exports.RECEIVER = RECEIVER; dirty = true; save(); }
-module.exports = { setReceiver, joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };
+module.exports = { season, setReceiver, joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };

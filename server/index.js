@@ -5,7 +5,7 @@ const E = require('./engine.js'), SRC = require('./sources.js'), C = require('..
 const PORT = +process.env.PORT || 8232, CLIENT = path.join(__dirname, '..', 'client'), ROOT = path.join(__dirname, '..');
 const RELAYER = process.env.BEAM_RELAYER_KEY ? String(process.env.BEAM_RELAYER_KEY).replace(/^0x/, '') : '';
 const EXPLORER = process.env.CHAIN_EXPLORER || 'https://explorer.mainnet.chain.robinhood.com';
-const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html' };
+const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html' };
 const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/shared/beam-node-core.js': 'shared/beam-node-core.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol', '/node/beam-node.js': 'node/beam-node.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.sol': 'text/plain; charset=utf-8', '.json': 'application/json', '.mp4': 'video/mp4', '.ico': 'image/x-icon' };
 
@@ -72,6 +72,7 @@ http.createServer(async (req, res) => { const u = new URL(req.url, 'http://x'), 
   const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(obj)); };
   try {
     if (p === '/api/status') return send(200, status());
+    if (p === '/api/season') return send(200, E.season(u.searchParams.get('wallet')));
     if (p === '/api/gate') { const out = { token: G.TOKEN, validatorMin: G.VALIDATOR_MIN, tunnelMin: G.TUNNEL_MIN, maxMult: G.MAX_MULT, off: G.OFF }; const w = u.searchParams.get('wallet'); if (w && /^0x[0-9a-fA-F]{40}$/.test(w)) { try { out.held = await G.balance(w); out.mult = G.mult(out.held); } catch { out.held = null; } } return send(200, out); }
     if (p === '/api/feeds') return send(200, { feeds: feeds(), round: S().round });
     if (p.startsWith('/api/feed/')) { const id = decodeURIComponent(p.slice(10)), s = SIG[id]; if (!s) return send(404, { error: 'unknown signal' }); const range = u.searchParams.get('range') || '1d', now = Math.floor(Date.now() / 1000), span = { '1h': 3600, '6h': 21600, '1d': 86400, '7d': 604800 }[range] || 86400;

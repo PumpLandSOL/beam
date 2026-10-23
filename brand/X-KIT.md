@@ -245,3 +245,18 @@ Balances checked live on Robinhood Chain. Sell below and access pauses.
 
 beamprotocol.org/run
 ```
+
+### 20. Oracle Season 1 (video) · 234 chars · media: `beam-season-16s.mp4`
+```
+Oracle Season 1 is live.
+
+Every round your validator signs: 10 pts
+Every packet you co-sign: 5 pts
+Every packet your tunnel delivers: 2 pts
+
+Hold more $BEAM, earn up to 4x.
+
+Build the oracle. Get on the board.
+
+beamprotocol.org/season
+```
