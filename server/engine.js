@@ -23,7 +23,8 @@ let dirty = true; const save = () => { if (!dirty) return; try { fs.writeFileSyn
 setInterval(save, 15000);
 
 const LIVE = { rounds: [], prices: {}, subs: {} }; // in-memory: recent rounds, latest aggregate, latest per-validator submissions
-const isActive = (o) => o && !(o.jailedUntil > Date.now()) && Date.now() - (o.lastSeen || 0) < ACTIVE_MS;
+const mult = (h) => (h == null ? 1 : Math.max(1, Math.min(4, h / (+process.env.BEAM_VALIDATOR_MIN || 1000000))));
+const isActive = (o) => o && !o.gated && !(o.jailedUntil > Date.now()) && Date.now() - (o.lastSeen || 0) < ACTIVE_MS;
 const activeOpen = () => Object.values(S.open).filter(isActive);
 const vset = () => Object.fromEntries([...S.validators.map((v) => [v.address.toLowerCase(), v.stake]), ...activeOpen().map((o) => [o.address, o.power])]);
 const PENDING = { subs: {}, packets: [] }; // open-validator submissions for the next round; packets collecting co-signatures
@@ -101,9 +102,9 @@ function joinOpen(b, ip) { const msg = String(b.message || ''); if (!msg.startsW
   const prev = Object.values(S.open).find((x) => x.owner === owner && x.address !== node); if (prev) return { error: 'this wallet already runs validator ' + prev.name + '. One validator per wallet.' };
   if (!S.open[node] && !/^(::1|127.|::ffff:127.)/.test(String(ip || ''))) { const k = String(ip || ''), now = Date.now(); ip24[k] = (ip24[k] || []).filter((t) => now - t < 86400000); if (ip24[k].length >= 3) return { error: 'too many new validators from this network today' }; ip24[k].push(now); }
   const name = clean(o.name, 24) || 'node-' + node.slice(2, 8); const kind = o.kind === 'headless' ? 'headless' : 'browser';
-  S.open[node] = Object.assign(S.open[node] || { address: node, joined: Date.now(), rounds: 0, missed: 0, devSum: 0, devN: 0, signed: 0, strikes: [], jails: 0 }, { owner, name, kind, power: OPEN_POWER, stake: OPEN_POWER, lastSeen: Date.now() });
+  S.open[node] = Object.assign(S.open[node] || { address: node, joined: Date.now(), rounds: 0, missed: 0, devSum: 0, devN: 0, signed: 0, strikes: [], jails: 0 }, { owner, name, kind, held: b.held, gated: false, power: Math.round(OPEN_POWER * mult(b.held)), stake: Math.round(OPEN_POWER * mult(b.held)), lastSeen: Date.now() });
   dirty = true; return { ok: true, validator: pubOpen(S.open[node]) }; }
-const pubOpen = (o) => ({ address: o.address, owner: o.owner, name: o.name, kind: o.kind, power: o.power, joined: o.joined, rounds: o.rounds, missed: o.missed, signed: o.signed, uptime: o.rounds / Math.max(1, o.rounds + o.missed), dev: o.devN ? o.devSum / o.devN : null, strikes: (o.strikes || []).length, jailed: o.jailedUntil > Date.now() ? o.jailedUntil : null, active: isActive(o), lastSeen: o.lastSeen });
+const pubOpen = (o) => ({ held: o.held == null ? null : Math.floor(o.held), gated: !!o.gated, address: o.address, owner: o.owner, name: o.name, kind: o.kind, power: o.power, joined: o.joined, rounds: o.rounds, missed: o.missed, signed: o.signed, uptime: o.rounds / Math.max(1, o.rounds + o.missed), dev: o.devN ? o.devSum / o.devN : null, strikes: (o.strikes || []).length, jailed: o.jailedUntil > Date.now() ? o.jailedUntil : null, active: isActive(o), lastSeen: o.lastSeen });
 function work(addr) { const o = S.open[String(addr || '').toLowerCase()]; if (o) { o.lastSeen = Date.now(); }
   return { next: S.round + 1, roundMs: ROUND_MS, me: o ? pubOpen(o) : null, packets: PENDING.packets.map((p) => ({ tunnelId: p.tunnelId, seq: p.seq, ts: p.ts, chainId: p.chainId, receiver: p.receiver, ids: p.ids, prices: p.prices, digest: p.digest, signed: o ? !!p.cosig[o.address] : false })) }; }
 function submitOpen(b) { const a = String(b.node || '').toLowerCase(), o = S.open[a]; if (!o) return { error: 'unknown validator; join first' }; if (o.jailedUntil > Date.now()) return { error: 'jailed until ' + new Date(o.jailedUntil).toISOString() };

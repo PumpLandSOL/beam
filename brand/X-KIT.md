@@ -219,3 +219,29 @@ Then: staked slashing, custom feeds
 
 beamprotocol.org
 ```
+
+### 18. vs top oracles · 240 chars · media: `beam-g13-vs-oracles.png`
+```
+Chainlink, Pyth, RedStone, Band. Every top oracle decides who gets to sign the price.
+
+$BEAM doesn't. Anyone can run an oracle validator, even from a browser tab.
+
+The most open oracle in crypto, built for Robinhood Chain.
+
+beamprotocol.org
+```
+
+### 19. Token utility · 228 chars · media: `beam-g14-utility.png`
+```
+Why hold $BEAM?
+
+Running the oracle takes it.
+
+1M $BEAM = run a validator
+4M $BEAM = 4x voting power
+250k $BEAM = open a price tunnel
+
+Balances checked live on Robinhood Chain. Sell below and access pauses.
+
+beamprotocol.org/run
+```
