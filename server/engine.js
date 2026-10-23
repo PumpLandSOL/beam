@@ -5,7 +5,7 @@ const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const C = require('../shared/beam-crypto.js'), SRC = require('./sources.js');
 const DATA = process.env.DATA_PATH || path.join(__dirname, '..', 'data'), FILE = path.join(DATA, 'beam.json');
 const ROUND_MS = +process.env.BEAM_ROUND_MS || 10000, CHAIN_ID = +(process.env.CHAIN_ID || 4663), SCALE = 1e8;
-const RECEIVER = (process.env.BEAM_RECEIVER || '0x0000000000000000000000000000000000000000').toLowerCase();
+let RECEIVER = (process.env.BEAM_RECEIVER || '0x0000000000000000000000000000000000000000').toLowerCase();
 const VNAMES = [['Prism', 1800000], ['Photon', 1500000], ['Lumen', 1350000], ['Aurora', 1200000], ['Flare', 1050000], ['Corona', 900000], ['Halo', 800000], ['Spectra', 700000], ['Zenith', 600000]];
 const OPEN_POWER = +process.env.BEAM_OPEN_POWER || 250000, ACTIVE_MS = 45000, COLLECT_MS = +process.env.BEAM_COLLECT_MS || 4000, STRIKE_BPS = 150, JAIL_MS = 30 * 60000;
 const CRYPTO_SRC = ['coinbase', 'kraken', 'okx', 'gemini', 'bitfinex', 'binanceus', 'cryptocom', 'bitstamp'];
@@ -18,6 +18,7 @@ function fresh() {
 }
 try { fs.mkdirSync(DATA, { recursive: true }); } catch {}
 try { S = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { S = fresh(); }
+if (RECEIVER === '0x0000000000000000000000000000000000000000' && S.receiver) RECEIVER = S.receiver; // auto-deployed receiver persists in the data file
 S.open = S.open || {}; // permissionless validators: address -> record
 let dirty = true; const save = () => { if (!dirty) return; try { fs.writeFileSync(FILE + '.tmp', JSON.stringify(S)); fs.renameSync(FILE + '.tmp', FILE); dirty = false; } catch (e) { console.error('save failed', e.message); } };
 setInterval(save, 15000);
@@ -117,4 +118,5 @@ function signOpen(b) { const a = String(b.node || '').toLowerCase(), o = S.open[
   let r; try { r = C.recover(p.digest, b.sig).toLowerCase(); } catch { return { error: 'bad signature' }; } if (r !== a) return { error: 'signature does not match validator' };
   p.cosig[a] = b.sig; o.signed++; o.lastSeen = Date.now(); return { ok: true }; }
 function start() { backfill().catch(() => {}); SRC.start(); setTimeout(function tick() { try { round(); } catch (e) { console.error('round', e); } setTimeout(tick, ROUND_MS); }, 6000); }
-module.exports = { joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };
+function setReceiver(a) { RECEIVER = String(a).toLowerCase(); S.receiver = RECEIVER; for (const t of Object.values(S.tunnels)) if (t.owner === 'beam') t.receiver = RECEIVER; module.exports.RECEIVER = RECEIVER; dirty = true; save(); }
+module.exports = { setReceiver, joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };

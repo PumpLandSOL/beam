@@ -11,12 +11,23 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 
 // ---------- relayer: pushes packets for the configured receiver to Robinhood Chain, one at a time ----------
 const RQ = []; let relaying = false, relayStats = { sent: 0, failed: 0, last: null, error: null };
-E.onPacket = (p) => { if (RELAYER && E.RECEIVER !== '0x0000000000000000000000000000000000000000' && p.receiver === E.RECEIVER) { p.status = 'queued'; RQ.push(p); pump(); } };
+const RELAY_EVERY = +process.env.BEAM_RELAY_EVERY_MS || 1800000; let lastRelay = 0; // one on-chain update per window keeps gas small
+E.onPacket = (p) => { if (RELAYER && E.RECEIVER !== '0x0000000000000000000000000000000000000000' && p.receiver === E.RECEIVER && Date.now() - lastRelay >= RELAY_EVERY) { lastRelay = Date.now(); p.status = 'queued'; RQ.push(p); pump(); } };
 async function pump() { if (relaying || !RQ.length) return; relaying = true; const p = RQ.shift();
   try { if (RQ.length > 20) { p.status = 'skipped'; } else { const h = await V.sendTx(RELAYER, { to: p.receiver, data: V.encRelay(p) }); p.tx = h; p.status = 'relaying'; const r = await V.receipt(h); p.status = r && r.status === '0x1' ? 'relayed' : 'failed'; if (r) p.gas = parseInt(r.gasUsed); relayStats.sent++; relayStats.last = Date.now(); } }
   catch (e) { p.status = 'failed'; p.error = String(e.message).slice(0, 120); relayStats.failed++; relayStats.error = p.error; }
   E.markDirty(); relaying = false; pump(); }
 
+// ---------- auto-deploy: with BEAM_RELAYER_KEY set and no receiver yet, the server deploys BeamReceiver itself (relayer = owner) ----------
+let deployStats = { state: 'idle', tx: null, error: null };
+async function autoDeploy() { if (!RELAYER || E.RECEIVER !== '0x0000000000000000000000000000000000000000') return;
+  try { const me = C.addressOf(RELAYER), bal = BigInt(await V.rpc('eth_getBalance', [me, 'latest'])); if (bal === 0n) { deployStats = { state: 'waiting for ETH', tx: null, error: 'fund ' + me + ' with ETH on Robinhood Chain' }; console.log('[deploy] fund', me); return setTimeout(autoDeploy, 60000); }
+    const art = JSON.parse(fs.readFileSync(path.join(ROOT, 'contracts', 'out', 'BeamReceiver.sol', 'BeamReceiver.json'), 'utf8')), set = E.vset(), keys = Object.keys(set).sort();
+    deployStats.state = 'deploying'; const h = await V.sendTx(RELAYER, { data: art.bytecode.object + V.encCtor(keys, keys.map((k) => set[k])) }); deployStats.tx = h; console.log('[deploy] tx', h);
+    const r = await V.receipt(h, undefined, 180); if (!r || r.status !== '0x1') throw new Error('deploy reverted');
+    E.setReceiver(r.contractAddress); synced = keys.map((k) => k + ':' + set[k]).join(','); deployStats = { state: 'deployed', tx: h, error: null, address: r.contractAddress }; console.log('[deploy] BeamReceiver at', r.contractAddress); }
+  catch (e) { deployStats = { state: 'failed', tx: deployStats.tx, error: String(e.message).slice(0, 160) }; console.error('[deploy]', e.message); setTimeout(autoDeploy, 120000); } }
+setTimeout(autoDeploy, 12000);
 // ---------- validator-set sync: keeps BeamReceiver's on-chain set equal to the active set (genesis + open validators) ----------
 let synced = '', syncStats = { last: null, tx: null, error: null, size: 0 };
 async function syncSet() { if (!RELAYER || E.RECEIVER === '0x0000000000000000000000000000000000000000') return; const set = E.vset(), keys = Object.keys(set).sort(), sig = keys.map((k) => k + ':' + set[k]).join(',');
@@ -36,7 +47,7 @@ function spark(id) { const now = Math.floor(Date.now() / 1000), h = (S().candles
 function feeds() { return SRC.SIGNALS.map((s) => { const p = E.LIVE.prices[s.id]; return { id: s.id, sym: s.sym, name: s.name, cls: s.cls, price: p ? p.price : null, ts: p ? p.ts : null, round: p ? p.round : null, n: p ? p.n : 0, power: p ? p.power : 0, spread: p ? p.spread : null, chg: chg24(s.id), spark: spark(s.id) }; }); }
 function validators() { const tot = S().validators.reduce((t, v) => t + v.stake, 0); return S().validators.map((v, i) => ({ rank: i + 1, name: v.name, address: v.address, stake: v.stake, power: v.stake / tot, sources: v.sources, rounds: v.rounds, missed: v.missed, uptime: v.rounds / Math.max(1, v.rounds + v.missed), dev: v.devN ? v.devSum / v.devN : null, since: v.since, live: !!E.LIVE.subs[v.address] })); }
 function status() { const st = S(); return { name: 'BEAM', chainId: E.CHAIN_ID, round: st.round, head: st.head, roundMs: E.ROUND_MS, genesis: st.genesis, validators: st.validators.length, signals: Object.keys(E.LIVE.prices).length, signalsTotal: SRC.SIGNALS.length,
-  sources: Object.fromEntries(Object.entries(SRC.STATE).map(([k, v]) => [k, { ok: v.ok, ts: v.ts, latency: v.latency, n: Object.keys(v.prices).length, err: v.err }])), receiver: E.RECEIVER, relayer: RELAYER ? C.addressOf(RELAYER) : null, relayStats, syncStats, explorer: EXPLORER,
+  sources: Object.fromEntries(Object.entries(SRC.STATE).map(([k, v]) => [k, { ok: v.ok, ts: v.ts, latency: v.latency, n: Object.keys(v.prices).length, err: v.err }])), receiver: E.RECEIVER, relayer: RELAYER ? C.addressOf(RELAYER) : null, relayStats, syncStats, deployStats, explorer: EXPLORER,
   tunnels: Object.keys(st.tunnels).length, packets: Object.values(st.tunnels).reduce((t, x) => t + (x.packets || 0), 0), totalStake: st.validators.reduce((t, v) => t + v.stake, 0), validatorSet: E.vset(), open: { active: E.activeOpen().length, registered: Object.keys(st.open || {}).length, power: E.OPEN_POWER }, activeValidators: Object.keys(E.vset()).length, lastPacket: (() => { const p = st.packets.find((x) => x.status === 'signed' || x.status === 'relayed'); return p ? { tunnelId: p.tunnelId, seq: p.seq, signers: p.signers || p.sigs.length, openSigners: p.openSigners || 0, power: p.power, total: p.total } : null; })() }; }
 const pubTunnel = (t) => ({ ...t, last: undefined });
 // ---------- tunnel creation: the owner signs a plain-text request with their EVM wallet ----------
