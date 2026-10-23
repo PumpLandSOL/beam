@@ -286,3 +286,21 @@ The permissionless oracle.
 
 beamprotocol.org/run
 ```
+
+### 23. Oracle ATH market caps · 188 chars · media: `beam-g15-ath.png`
+```
+Oracle token ATH market caps:
+
+$LINK $22.8B
+$UMA $2.36B
+$PYTH $1.99B
+$TRB $1.49B
+$BAND $643M
+$API3 $505M
+$DIA $351M
+$RED $207M
+
+$BEAM, the oracle for Robinhood Chain: TBD
+
+beamprotocol.org
+```
