@@ -406,18 +406,13 @@ Every on-chain delivery, read straight from Robinhood Chain
 Nothing hidden. Check it anytime.
 ```
 
-### 32. Oracle overview · 227 chars · media: `beam-g21-peak.png`
+### 32. Oracle overview · 214 chars · media: `beam-g21-peak.png`
 ```
-Oracles are some of the biggest projects in crypto.
+Chainlink hit a $22.8B market cap selling one thing: prices that smart contracts can trust.
 
-At their all-time highs:
-$LINK $22.8B
-$UMA $2.36B
-$PYTH $1.99B
-$TRB $1.49B
-$BAND $643M
+No app. No chain. Just the price layer.
 
-Each became the price layer for its ecosystem. Robinhood Chain's price layer is $BEAM.
+Robinhood Chain is putting stocks on-chain and needs that layer too. It's $BEAM.
 ```
 
 ### 33. Oracle overview · 232 chars · media: `beam-g22-no-oracle.png`
