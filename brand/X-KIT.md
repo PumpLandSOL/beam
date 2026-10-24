@@ -391,3 +391,42 @@ $BEAM day one:
 
 All shipped. All verifiable.
 ```
+
+### 31. Status page (video) · 245 chars · media: `beam-status-15s.mp4`
+```
+New: beamprotocol.org/status
+
+The whole $BEAM oracle, in the open:
+
+Every exchange source, live health and latency
+Every validator signing
+Every round
+Every on-chain delivery, read straight from Robinhood Chain
+
+Nothing hidden. Check it anytime.
+```
+
+### 32. Oracle overview · 227 chars · media: `beam-g15-ath.png`
+```
+Oracles are some of the biggest projects in crypto.
+
+At their all-time highs:
+$LINK $22.8B
+$UMA $2.36B
+$PYTH $1.99B
+$TRB $1.49B
+$BAND $643M
+
+Each became the price layer for its ecosystem. Robinhood Chain's price layer is $BEAM.
+```
+
+### 33. Oracle overview · 232 chars · media: `beam-g16-every-chain.png`
+```
+Why do oracles get so big?
+
+Every lending market, perp DEX, vault and stablecoin needs a price it can trust. No oracle, no DeFi.
+
+Robinhood Chain is putting stocks on-chain. Every app built on it needs prices.
+
+That oracle is $BEAM.
+```

@@ -26,6 +26,7 @@ async function load() { const s = await api('/api/status'), src = Object.entries
   const topic = '0x' + BeamCrypto.keccak('Relayed(uint64,uint64,uint64,uint256,uint256,address)');
   const r = await rpc([{ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [R, 'latest'] }, { jsonrpc: '2.0', id: 2, method: 'eth_getBalance', params: [s.relayer, 'latest'] }, { jsonrpc: '2.0', id: 3, method: 'eth_blockNumber', params: [] }, { jsonrpc: '2.0', id: 4, method: 'eth_getLogs', params: [{ address: R, fromBlock: '0x' + (95796230).toString(16), toBlock: 'latest', topics: [topic] }] }]);
   $('c2').innerHTML = r[1] && r[1].length > 2 ? `<span class="ok">✓ deployed · ${(r[1].length - 2) / 2} bytes</span>` : 'missing';
+  if (!s.relayer) $('c5').parentNode.style.display = 'none';
   $('c5').innerHTML = r[2] ? `<a class="lk" href="${ex}/address/${s.relayer}" target="_blank" rel="noopener">${(Number(BigInt(r[2])) / 1e18).toFixed(4)} ETH ↗</a>` : '—';
   $('c6').textContent = r[3] ? Number(BigInt(r[3])).toLocaleString('en-US') : '—'; $('c4').textContent = r[4] ? r[4].length : '—'; }
 load().catch(() => {}); setInterval(() => load().catch(() => {}), 15000);
