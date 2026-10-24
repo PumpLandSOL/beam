@@ -406,7 +406,7 @@ Every on-chain delivery, read straight from Robinhood Chain
 Nothing hidden. Check it anytime.
 ```
 
-### 32. Oracle overview · 227 chars · media: `beam-g15-ath.png`
+### 32. Oracle overview · 227 chars · media: `beam-g21-peak.png`
 ```
 Oracles are some of the biggest projects in crypto.
 
@@ -420,7 +420,7 @@ $BAND $643M
 Each became the price layer for its ecosystem. Robinhood Chain's price layer is $BEAM.
 ```
 
-### 33. Oracle overview · 232 chars · media: `beam-g16-every-chain.png`
+### 33. Oracle overview · 232 chars · media: `beam-g22-no-oracle.png`
 ```
 Why do oracles get so big?
 
