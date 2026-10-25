@@ -425,3 +425,84 @@ Robinhood Chain is putting stocks on-chain. Every app built on it needs prices.
 
 That oracle is $BEAM.
 ```
+
+### 34. Set 3 · 235 chars · media: `beam-listings-18s.mp4`
+```
+Massive update: Permissionless Feeds.
+
+Any $BEAM holder can now add a price feed. A US stock, an ETF, a crypto asset.
+
+Type the ticker, BEAM checks live sources, sign once. Validators price it the next round.
+
+beamprotocol.org/listings
+```
+
+### 35. Set 3 · 235 chars · media: `beam-g24-who-decides.png`
+```
+Who decides which prices an oracle supports?
+
+Everywhere else: the team.
+
+On $BEAM: you. Hold 500k, type a ticker, sign once. Every validator starts pricing it within 10 seconds.
+
+The permissionless oracle just got more permissionless.
+```
+
+### 36. Set 3 · 221 chars · media: `beam-how-20s.mp4`
+```
+How $BEAM works, in 20 seconds:
+
+8 exchanges + US market data
+→ 9 validators sign what they see
+→ stake-weighted median every 10s
+→ signed packet lands in BeamReceiver on Robinhood Chain
+
+Verified by the chain. Not by us.
+```
+
+### 37. Set 3 · 208 chars · media: `beam-build-19s.mp4`
+```
+Building on Robinhood Chain?
+
+Read any $BEAM price from your contract in two lines:
+
+getPriceNoOlderThan("EQ:TSLA-USD", 3600)
+
+Stale prices revert. Fresh ones flow. Live on mainnet now.
+
+beamprotocol.org/docs
+```
+
+### 38. Set 3 · 221 chars · media: `beam-g23-list-any.png`
+```
+Want GME on-chain? VOO? TON?
+
+Don't wait for an oracle team to say yes. If you hold $BEAM, list it yourself.
+
+Crypto needs 3 exchanges agreeing within 2%. Stocks need a live US price. That's it.
+
+beamprotocol.org/listings
+```
+
+### 39. Set 3 · 207 chars · media: `beam-g25-stocks.png`
+```
+Robinhood Chain is built for tokenized stocks. So is $BEAM.
+
+HOOD, TSLA, NVDA, AAPL, SPY and 10 more priced every 10 seconds, pre-market and after-hours included.
+
+And now any US stock or ETF a holder lists.
+```
+
+### 40. Set 3 · 202 chars · media: `beam-g26-numbers.png`
+```
+$BEAM, by the numbers:
+
+14,947 oracle rounds signed
+86 verified on-chain updates
+39 live feeds
+10 price sources
+9 validators signing
+42 hours nonstop
+
+Running, not promised. Check every number on-chain.
+```
