@@ -5,7 +5,7 @@ const E = require('./engine.js'), SRC = require('./sources.js'), C = require('..
 const PORT = +process.env.PORT || 8232, CLIENT = path.join(__dirname, '..', 'client'), ROOT = path.join(__dirname, '..');
 const RELAYER = process.env.BEAM_RELAYER_KEY ? String(process.env.BEAM_RELAYER_KEY).replace(/^0x/, '') : '';
 const EXPLORER = process.env.CHAIN_EXPLORER || 'https://explorer.mainnet.chain.robinhood.com';
-const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html', '/embed': 'embed.html', '/onchain': 'onchain.html', '/status': 'status.html' };
+const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html', '/embed': 'embed.html', '/onchain': 'onchain.html', '/status': 'status.html', '/listings': 'listings.html' };
 const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/shared/beam-node-core.js': 'shared/beam-node-core.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol', '/node/beam-node.js': 'node/beam-node.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.sol': 'text/plain; charset=utf-8', '.json': 'application/json', '.mp4': 'video/mp4', '.ico': 'image/x-icon' };
 
@@ -41,10 +41,10 @@ setInterval(regate, +process.env.BEAM_GATE_MS || 300000); setTimeout(regate, 150
 setInterval(syncSet, +process.env.BEAM_SYNC_MS || 600000); setTimeout(syncSet, 20000);
 // ---------- views ----------
 const S = () => E.S();
-const SIG = Object.fromEntries(SRC.SIGNALS.map((s) => [s.id, s]));
+const SIG = new Proxy({}, { get: (_, id) => SRC.SIGNALS.find((s) => s.id === id) }); // listings join at runtime
 function chg24(id) { const cs = S().candles[id] || [], now = Math.floor(Date.now() / 1000); const old = cs.find((c) => c[0] >= now - 86400); const cur = E.LIVE.prices[id]; return old && cur ? (cur.price - old[1]) / old[1] * 100 : null; }
 function spark(id) { const now = Math.floor(Date.now() / 1000), h = (S().candles[id] || []).filter((c) => c[0] >= now - 21600).map((c) => [c[0], c[4]]); const step = Math.max(1, Math.floor(h.length / 60)); return h.filter((_, i) => i % step === 0).map((x) => x[1]); }
-function feeds() { return SRC.SIGNALS.map((s) => { const p = E.LIVE.prices[s.id]; return { id: s.id, sym: s.sym, name: s.name, cls: s.cls, price: p ? p.price : null, ts: p ? p.ts : null, round: p ? p.round : null, n: p ? p.n : 0, power: p ? p.power : 0, spread: p ? p.spread : null, chg: chg24(s.id), spark: spark(s.id) }; }); }
+function feeds() { return SRC.SIGNALS.map((s) => { const p = E.LIVE.prices[s.id]; return { listedBy: s.listedBy || null, listedAt: s.listedAt || null, id: s.id, sym: s.sym, name: s.name, cls: s.cls, price: p ? p.price : null, ts: p ? p.ts : null, round: p ? p.round : null, n: p ? p.n : 0, power: p ? p.power : 0, spread: p ? p.spread : null, chg: chg24(s.id), spark: spark(s.id) }; }); }
 function validators() { const tot = S().validators.reduce((t, v) => t + v.stake, 0); return S().validators.map((v, i) => ({ rank: i + 1, name: v.name, address: v.address, stake: v.stake, power: v.stake / tot, sources: v.sources, rounds: v.rounds, missed: v.missed, uptime: v.rounds / Math.max(1, v.rounds + v.missed), dev: v.devN ? v.devSum / v.devN : null, since: v.since, live: !!E.LIVE.subs[v.address] })); }
 function status() { const st = S(); return { name: 'BEAM', chainId: E.CHAIN_ID, round: st.round, head: st.head, roundMs: E.ROUND_MS, genesis: st.genesis, validators: st.validators.length, signals: Object.keys(E.LIVE.prices).length, signalsTotal: SRC.SIGNALS.length,
   sources: Object.fromEntries(Object.entries(SRC.STATE).map(([k, v]) => [k, { ok: v.ok, ts: v.ts, latency: v.latency, n: Object.keys(v.prices).length, err: v.err }])), receiver: E.RECEIVER, relayer: RELAYER ? C.addressOf(RELAYER) : null, relayStats, syncStats, deployStats, explorer: EXPLORER,
@@ -72,12 +72,26 @@ function frame(ids) { const r = E.LIVE.rounds[0]; const px = {}; for (const [id,
   return { round: S().round, head: S().head, ts: Date.now(), signers: r ? r.subs.length : 0, prices: px }; }
 setInterval(() => { if (S().round === lastStreamed) return; lastStreamed = S().round; for (const c of STREAM) { try { c.res.write('event: round\ndata: ' + JSON.stringify(frame(c.ids)) + '\n\n'); } catch {} } }, 500);
 setInterval(() => { for (const c of STREAM) { try { c.res.write(': ping\n\n'); } catch {} } }, 25000);
+// ---------- permissionless listings: any wallet holding LIST_MIN $BEAM can add a feed the sources confirm ----------
+const LIST_MIN = +process.env.BEAM_LIST_MIN || 500000, LIST_CAP = +process.env.BEAM_LIST_CAP || 100, list24 = {};
+async function createListing(b) { const msg = String(b.message || ''); if (!msg.startsWith('BEAM feed listing')) return { error: 'bad listing message' };
+  let owner; try { owner = C.recover('0x' + C.personal(msg), b.signature).toLowerCase(); } catch { return { error: 'bad signature' }; }
+  const o = parseReq(msg); if (Math.abs(Date.now() / 1000 - +o.issued) > 900) return { error: 'request expired; sign a fresh one' }; if ((o.owner || '').toLowerCase() !== owner) return { error: 'signature does not match the owner' };
+  if ((S().listings || []).length >= LIST_CAP) return { error: 'listing slots are full for now' };
+  const day = (list24[owner] || []).filter((t) => Date.now() - t < 86400000); if (day.length >= 3) return { error: 'up to 3 listings per wallet per day' };
+  const g = await G.check(owner, LIST_MIN); if (!g.ok) return { error: 'Listing a feed requires you to ' + g.error, gate: g };
+  const pr = await SRC.probe(o.symbol, o.class === 'crypto' ? 'crypto' : 'equity'); if (!pr.ok) return { error: pr.error, probe: pr };
+  if (SIG[pr.id]) return { error: pr.id + ' is already a BEAM feed' };
+  const l = { id: pr.id, sym: pr.sym, cls: pr.cls, name: pr.name, owner, ts: Date.now(), price: pr.price }; E.addListing(l); list24[owner] = day.concat(Date.now()); return { listing: l }; }
 // ---------- http ----------
 const readBody = (req) => new Promise((ok, no) => { let d = ''; req.on('data', (c) => { d += c; if (d.length > 1e5) req.destroy(); }); req.on('end', () => { try { ok(d ? JSON.parse(d) : {}); } catch (e) { no(e); } }); });
 http.createServer(async (req, res) => { const u = new URL(req.url, 'http://x'), p = u.pathname;
   const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(obj)); };
   try {
     if (p === '/api/status') return send(200, status());
+    if (p === '/api/listings' && req.method === 'POST') { const r = await createListing(await readBody(req)); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/listings') return send(200, { min: LIST_MIN, cap: LIST_CAP, listings: [...(S().listings || [])].reverse().map((l) => ({ ...l, live: E.LIVE.prices[l.id] ? E.LIVE.prices[l.id].price : null })) });
+    if (p === '/api/listings/probe') return send(200, await SRC.probe(u.searchParams.get('symbol'), u.searchParams.get('class') === 'crypto' ? 'crypto' : 'equity'));
     if (p === '/api/season') return send(200, E.season(u.searchParams.get('wallet')));
     if (p === '/api/gate') { const out = { token: G.TOKEN, validatorMin: G.VALIDATOR_MIN, tunnelMin: G.TUNNEL_MIN, maxMult: G.MAX_MULT, off: G.OFF }; const w = u.searchParams.get('wallet'); if (w && /^0x[0-9a-fA-F]{40}$/.test(w)) { try { out.held = await G.balance(w); out.mult = G.mult(out.held); } catch { out.held = null; } } return send(200, out); }
     if (p === '/api/feeds') return send(200, { feeds: feeds(), round: S().round });

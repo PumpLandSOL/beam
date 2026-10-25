@@ -22,7 +22,8 @@ if (RECEIVER === '0x0000000000000000000000000000000000000000' && S.receiver) REC
 S.open = S.open || {};
 const SEASON_END = Date.parse(process.env.BEAM_SEASON_END || '2026-12-31T23:59:59Z');
 S.season = S.season || { n: 1, start: Date.now(), pts: {} };
-function award(owner, kind, n) { if (!owner || owner === 'beam' || Date.now() > SEASON_END) return; const a = String(owner).toLowerCase(), p = S.season.pts[a] || (S.season.pts[a] = { validate: 0, cosign: 0, tunnel: 0, total: 0, first: Date.now() }); p[kind] += n; p.total += n; p.last = Date.now(); }
+S.listings = S.listings || []; for (const l of S.listings) SRC.addSignal(l);
+function award(owner, kind, n) { if (!owner || owner === 'beam' || Date.now() > SEASON_END) return; const a = String(owner).toLowerCase(), p = S.season.pts[a] || (S.season.pts[a] = { validate: 0, cosign: 0, tunnel: 0, list: 0, total: 0, first: Date.now() }); p[kind] = p[kind] || 0; p[kind] += n; p.total += n; p.last = Date.now(); }
 const pmult = (o) => (o.power || OPEN_POWER) / OPEN_POWER; // permissionless validators: address -> record
 let dirty = true; const save = () => { if (!dirty) return; try { fs.writeFileSync(FILE + '.tmp', JSON.stringify(S)); fs.renameSync(FILE + '.tmp', FILE); dirty = false; } catch (e) { console.error('save failed', e.message); } };
 setInterval(save, 15000);
@@ -122,8 +123,9 @@ function signOpen(b) { const a = String(b.node || '').toLowerCase(), o = S.open[
   let r; try { r = C.recover(p.digest, b.sig).toLowerCase(); } catch { return { error: 'bad signature' }; } if (r !== a) return { error: 'signature does not match validator' };
   p.cosig[a] = b.sig; o.signed++; award(o.owner, 'cosign', 5 * pmult(o)); o.lastSeen = Date.now(); return { ok: true }; }
 function start() { backfill().catch(() => {}); SRC.start(); setTimeout(function tick() { try { round(); } catch (e) { console.error('round', e); } setTimeout(tick, ROUND_MS); }, 6000); }
-function season(wallet) { const rows = Object.entries(S.season.pts).map(([a, p]) => ({ wallet: a, ...p, total: Math.round(p.total), validate: Math.round(p.validate), cosign: Math.round(p.cosign), tunnel: Math.round(p.tunnel) })).sort((x, y) => y.total - x.total);
+function season(wallet) { const rows = Object.entries(S.season.pts).map(([a, p]) => ({ wallet: a, ...p, total: Math.round(p.total), validate: Math.round(p.validate), cosign: Math.round(p.cosign), tunnel: Math.round(p.tunnel), list: Math.round(p.list || 0) })).sort((x, y) => y.total - x.total);
   rows.forEach((x, i) => { x.rank = i + 1; }); const me = wallet ? rows.find((x) => x.wallet === String(wallet).toLowerCase()) || null : undefined;
-  return { season: S.season.n, start: S.season.start, end: SEASON_END, live: Date.now() <= SEASON_END, players: rows.length, points: rows.reduce((t, x) => t + x.total, 0), rules: { validate: 10, cosign: 5, tunnel: 2, maxMult: 4 }, top: rows.slice(0, 100), me }; }
+  return { season: S.season.n, start: S.season.start, end: SEASON_END, live: Date.now() <= SEASON_END, players: rows.length, points: rows.reduce((t, x) => t + x.total, 0), rules: { validate: 10, cosign: 5, tunnel: 2, list: 50, maxMult: 4 }, top: rows.slice(0, 100), me }; }
+function addListing(l) { S.listings.push(l); SRC.addSignal(l); award(l.owner, 'list', 50); dirty = true; save(); }
 function setReceiver(a) { RECEIVER = String(a).toLowerCase(); S.receiver = RECEIVER; for (const t of Object.values(S.tunnels)) if (t.owner === 'beam') t.receiver = RECEIVER; module.exports.RECEIVER = RECEIVER; dirty = true; save(); }
-module.exports = { season, setReceiver, joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };
+module.exports = { addListing, season, setReceiver, joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };
