@@ -506,3 +506,88 @@ $BEAM, by the numbers:
 
 Running, not promised. Check every number on-chain.
 ```
+
+
+### 41. Set 4 · 239 chars · media: `beam-scripts-18s.mp4`
+```
+Massive update: Oracle Scripts.
+
+$BEAM now prices any data, not just prices. Weather, sentiment, dominance, earthquakes, any public JSON API.
+
+Every validator fetches it, signs it, and it lands on Robinhood Chain.
+
+beamprotocol.org/scripts
+```
+
+### 42. Set 4 · 208 chars · media: `beam-staking-18s.mp4`
+```
+Massive update: Validator Staking.
+
+Stake $BEAM behind any validator. 1 staked $BEAM = 1 unit of voting power.
+
+Misreport prices, get jailed, get slashed 5%. Slashed $BEAM is burned.
+
+beamprotocol.org/staking
+```
+
+### 43. Set 4 · 193 chars · media: `beam-g27-scripts.png`
+```
+An oracle that only knows prices is half an oracle.
+
+$BEAM Oracle Scripts: point at any API, pick a JSON path, sign once.
+
+Validators run it on schedule and the median goes live as an OS: feed.
+```
+
+### 44. Set 4 · 201 chars · media: `beam-g28-script-how.png`
+```
+How a $BEAM Oracle Script works:
+
+URL in
+→ every validator fetches it itself
+→ stake-weighted median
+→ signed into a packet
+→ BeamReceiver on Robinhood Chain
+
+getPriceNoOlderThan("OS:NYC-TEMP-C", 3600)
+```
+
+### 45. Set 4 · 233 chars · media: `beam-g29-staking.png`
+```
+Your $BEAM can now help secure the oracle.
+
+Stake behind any validator you trust and it gains voting power. If that validator reports bad prices, it gets slashed.
+
+Unbond any time. Tokens are back in 7 days.
+
+beamprotocol.org/staking
+```
+
+### 46. Set 4 · 204 chars · media: `beam-g30-skin.png`
+```
+Oracles are only as honest as what they stand to lose.
+
+On $BEAM, a validator that misreports gets jailed and its stake pool is slashed on-chain.
+
+Stakers pick who to back. Uptime and accuracy are public.
+```
+
+### 47. Set 4 · 206 chars · media: `beam-g27-scripts.png`
+```
+Need a sports score, a rate, or an on-chain stat in your Robinhood Chain contract?
+
+Don't wait for an oracle team. Hold $BEAM, publish an Oracle Script, and read it like any price.
+
+beamprotocol.org/scripts
+```
+
+### 48. Discord · 230 chars · media: `beam-keyart.png`
+```
+The $BEAM Discord is open.
+
+Validators, stakers, builders and anyone listing feeds or writing Oracle Scripts: this is where the oracle gets built.
+
+Get help running a node, request feeds, talk to the team.
+
+https://discord.gg/ZWP3khEWNF
+```
