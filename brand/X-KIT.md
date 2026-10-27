@@ -603,3 +603,47 @@ Alerts: the oracle pings your Discord
 
 beamprotocol.org/docs
 ```
+
+### 50. Set 5 · VRF · 238 chars · media: `beam-vrf-15s.mp4`
+```
+New on $BEAM: VRF.
+
+Request a random number with any seed. Every validator signs it, and the result is the hash of those signatures. Nobody knows it in advance.
+
+Verify it in your browser or on-chain with BeamVRF.
+
+beamprotocol.org/vrf
+```
+
+### 51. Set 5 · Proof of Reserves · 227 chars · media: `beam-reserves-15s.mp4`
+```
+New on $BEAM: Proof of Reserves.
+
+Validators read token supply and wallet balances straight from Robinhood Chain and sign them every round. Reserve ratios included.
+
+Don't trust the backing. Check it.
+
+beamprotocol.org/reserves
+```
+
+### 52. Set 5 · TWAP · 231 chars · media: `beam-twap-15s.mp4`
+```
+New on $BEAM: TWAP feeds.
+
+5 minute, 1 hour and 24 hour average prices for every feed, signed into packets like any price. One spiked print can't move them.
+
+getPriceNoOlderThan("TWAP:EQ:TSLA-USD:1h", 3600)
+
+beamprotocol.org/twap
+```
+
+### 53. Set 5 · Alerts · 234 chars · media: `beam-alerts-15s.mp4`
+```
+New on $BEAM: price alerts.
+
+Pick a feed, set above, below or a % move. When it hits, the oracle posts to your Discord or any webhook, with the signed round attached.
+
+Stop refreshing. Let the oracle ping you.
+
+beamprotocol.org/alerts
+```
