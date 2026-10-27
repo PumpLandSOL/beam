@@ -50,6 +50,7 @@ async function probe(sym, cls) { sym = String(sym || '').toUpperCase().trim();
     return { ok: true, sym, cls: 'equity', id: 'EQ:' + sym + '-USD', name: String(meta.longName || meta.shortName || sym).slice(0, 40), price: p, exchange: meta.fullExchangeName, sources: { yahoo: p } }; }
   catch { return { ok: false, error: 'could not find ' + sym }; } }
 function addSignal(l) { if (SIGNALS.some((x) => x.id === l.id)) return false;
+  if (l.cls === 'script') { SIGNALS.push({ id: l.id, sym: l.sym, name: l.name, cls: 'script', unit: l.unit, listedBy: l.listedBy, listedAt: l.listedAt }); return true; }
   if (l.cls === 'crypto') { CRYPTO.push(l.sym); SIGNALS.push({ id: l.id, sym: l.sym, name: l.name, cls: 'crypto', listedBy: l.owner, listedAt: l.ts }); }
   else SIGNALS.push({ id: l.id, sym: l.sym, name: l.name, cls: 'equity', yahoo: l.sym, listedBy: l.owner, listedAt: l.ts });
   return true; } EX.yahoo2 = () => yahoo('query2');
