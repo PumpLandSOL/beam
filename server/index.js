@@ -1,12 +1,12 @@
 // BEAM: oracle network for Robinhood Chain. node server/index.js (PORT, default 8232)
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path');
-const E = require('./engine.js'), SRC = require('./sources.js'), C = require('../shared/beam-crypto.js'), V = require('./evm.js'), G = require('./gate.js'), ST = require('./staking.js');
+const E = require('./engine.js'), SRC = require('./sources.js'), C = require('../shared/beam-crypto.js'), V = require('./evm.js'), G = require('./gate.js'), ST = require('./staking.js'), AL = require('./alerts.js');
 const PORT = +process.env.PORT || 8232, CLIENT = path.join(__dirname, '..', 'client'), ROOT = path.join(__dirname, '..');
 const RELAYER = process.env.BEAM_RELAYER_KEY ? String(process.env.BEAM_RELAYER_KEY).replace(/^0x/, '') : '';
 const EXPLORER = process.env.CHAIN_EXPLORER || 'https://explorer.mainnet.chain.robinhood.com';
-const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html', '/embed': 'embed.html', '/onchain': 'onchain.html', '/status': 'status.html', '/listings': 'listings.html', '/scripts': 'scripts.html', '/staking': 'staking.html' };
-const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/shared/beam-node-core.js': 'shared/beam-node-core.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol', '/contracts/BeamStaking.sol': 'contracts/src/BeamStaking.sol', '/node/beam-node.js': 'node/beam-node.js' };
+const ROUTES = { '/': 'index.html', '/feeds': 'feeds.html', '/feed': 'feed.html', '/validators': 'validators.html', '/tunnels': 'tunnels.html', '/explorer': 'explorer.html', '/verify': 'verify.html', '/docs': 'docs.html', '/run': 'run.html', '/season': 'season.html', '/embed': 'embed.html', '/onchain': 'onchain.html', '/status': 'status.html', '/listings': 'listings.html', '/scripts': 'scripts.html', '/staking': 'staking.html', '/vrf': 'vrf.html', '/reserves': 'reserves.html', '/twap': 'twap.html', '/alerts': 'alerts.html' };
+const FILES = { '/shared/keccak.js': 'shared/keccak.js', '/shared/beam-crypto.js': 'shared/beam-crypto.js', '/shared/beam-node-core.js': 'shared/beam-node-core.js', '/contracts/BeamReceiver.sol': 'contracts/src/BeamReceiver.sol', '/contracts/BeamStaking.sol': 'contracts/src/BeamStaking.sol', '/contracts/BeamVRF.sol': 'contracts/src/BeamVRF.sol', '/node/beam-node.js': 'node/beam-node.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.sol': 'text/plain; charset=utf-8', '.json': 'application/json', '.mp4': 'video/mp4', '.ico': 'image/x-icon' };
 
 // ---------- relayer: pushes packets for the configured receiver to Robinhood Chain, one at a time ----------
@@ -41,7 +41,8 @@ setInterval(regate, +process.env.BEAM_GATE_MS || 300000); setTimeout(regate, 150
 setInterval(syncSet, +process.env.BEAM_SYNC_MS || 600000); setTimeout(syncSet, 20000);
 // ---------- views ----------
 const S = () => E.S();
-const SIG = new Proxy({}, { get: (_, id) => SRC.SIGNALS.find((s) => s.id === id) }); // listings join at runtime
+const SIG = new Proxy({}, { get: (_, id) => SRC.SIGNALS.find((s) => s.id === id) || twapSig(id) }); // listings join at runtime; TWAP:<feed>:<window> resolves to its feed
+function twapSig(id) { const t = E.TW.parse(id), b = t && E.TW.idOf(t.feed, t.w) && SRC.SIGNALS.find((s) => s.id === t.feed); return b ? { id, sym: b.sym, name: b.name + ' TWAP ' + t.w, cls: 'twap', unit: b.unit, feed: b.id, window: t.w } : undefined; }
 function chg24(id) { const cs = S().candles[id] || [], now = Math.floor(Date.now() / 1000); const old = cs.find((c) => c[0] >= now - 86400); const cur = E.LIVE.prices[id]; return old && cur ? (cur.price - old[1]) / old[1] * 100 : null; }
 function spark(id) { const now = Math.floor(Date.now() / 1000), h = (S().candles[id] || []).filter((c) => c[0] >= now - 21600).map((c) => [c[0], c[4]]); const step = Math.max(1, Math.floor(h.length / 60)); return h.filter((_, i) => i % step === 0).map((x) => x[1]); }
 function feeds() { return SRC.SIGNALS.map((s) => { const p = E.LIVE.prices[s.id]; return { unit: s.unit || null, listedBy: s.listedBy || null, listedAt: s.listedAt || null, id: s.id, sym: s.sym, name: s.name, cls: s.cls, price: p ? p.price : null, ts: p ? p.ts : null, round: p ? p.round : null, n: p ? p.n : 0, power: p ? p.power : 0, spread: p ? p.spread : null, chg: chg24(s.id), spark: spark(s.id) }; }); }
@@ -49,6 +50,8 @@ function validators() { const tot = S().validators.reduce((t, v) => t + v.stake,
 function status() { const st = S(); return { name: 'BEAM', chainId: E.CHAIN_ID, round: st.round, head: st.head, roundMs: E.ROUND_MS, genesis: st.genesis, validators: st.validators.length, signals: Object.keys(E.LIVE.prices).length, signalsTotal: SRC.SIGNALS.length,
   sources: Object.fromEntries(Object.entries(SRC.STATE).map(([k, v]) => [k, { ok: v.ok, ts: v.ts, latency: v.latency, n: Object.keys(v.prices).length, err: v.err }])), receiver: E.RECEIVER, relayer: RELAYER ? C.addressOf(RELAYER) : null, relayStats, syncStats, deployStats, explorer: EXPLORER,
   streamClients: STREAM.size, tunnels: Object.keys(st.tunnels).length, packets: Object.values(st.tunnels).reduce((t, x) => t + (x.packets || 0), 0), totalStake: st.validators.reduce((t, v) => t + v.stake, 0), validatorSet: E.vset(), open: { active: E.activeOpen().length, registered: Object.keys(st.open || {}).length, power: E.OPEN_POWER }, activeValidators: Object.keys(E.vset()).length, lastPacket: (() => { const p = st.packets.find((x) => x.status === 'signed' || x.status === 'relayed'); return p ? { tunnelId: p.tunnelId, seq: p.seq, signers: p.signers || p.sigs.length, openSigners: p.openSigners || 0, power: p.power, total: p.total } : null; })() }; }
+AL.init(S(), { chainId: E.CHAIN_ID, isFeed: (id) => !!SIG[id], price: (id) => E.LIVE.prices[id] || null, round: () => E.LIVE.rounds[0] || null, attest: E.attest });
+E.onRound = () => { AL.check(); };
 const pubTunnel = (t) => ({ ...t, last: undefined });
 // ---------- tunnel creation: the owner signs a plain-text request with their EVM wallet ----------
 function parseReq(msg) { const o = {}; for (const line of String(msg).split('\n').slice(1)) { const i = line.indexOf(':'); if (i > 0) o[line.slice(0, i).trim()] = line.slice(i + 1).trim(); } return o; }
@@ -95,6 +98,22 @@ async function publishScript(b) { const msg = String(b.message || ''); if (!msg.
   const g = await G.check(owner, SCRIPT_MIN); if (!g.ok) return { error: 'Publishing a script requires you to ' + g.error, gate: g };
   const r = await E.SCR.validate(o); if (r.error) return r; const sc = E.addScript(r.script, owner); script24[owner] = day.concat(Date.now()); return { script: E.SCR.pub(sc), tests: r.tests }; }
 const pubScript = (sc) => E.SCR.pub(sc, E.LIVE.prices[sc.id] ? { value: E.LIVE.prices[sc.id].price, ts: E.LIVE.prices[sc.id].ts, n: E.LIVE.prices[sc.id].n, round: E.LIVE.prices[sc.id].round } : null);
+// ---------- proof of reserves: $BEAM holders register POR: feeds read from Robinhood Chain ----------
+const POR_MIN = +process.env.BEAM_POR_MIN || LIST_MIN, POR_CAP = +process.env.BEAM_POR_CAP || 100, por24 = {};
+async function publishPor(b) { const msg = String(b.message || ''); if (!msg.startsWith('BEAM reserve feed')) return { error: 'bad reserve feed message' }; const o = parseReq(msg);
+  if (b.dry) { const r = await E.POR.validate(o); return r.error ? r : { ok: true, feed: r.feed, value: r.value }; }
+  let owner; try { owner = C.recover('0x' + C.personal(msg), b.signature).toLowerCase(); } catch { return { error: 'bad signature' }; }
+  if (Math.abs(Date.now() / 1000 - +o.issued) > 900) return { error: 'request expired; sign a fresh one' }; if ((o.owner || '').toLowerCase() !== owner) return { error: 'signature does not match the owner' };
+  if (E.POR.all().filter((x) => x.owner !== 'beam').length >= POR_CAP) return { error: 'reserve feed slots are full for now' };
+  const day = (por24[owner] || []).filter((t) => Date.now() - t < 86400000); if (day.length >= 3) return { error: 'up to 3 reserve feeds per wallet per day' };
+  const g = await G.check(owner, POR_MIN); if (!g.ok) return { error: 'Registering a reserve feed requires you to ' + g.error, gate: g };
+  const r = await E.POR.validate(o); if (r.error) return r; const f = E.addPor(r.feed, owner); por24[owner] = day.concat(Date.now()); return { feed: pubPor(f), value: r.value }; }
+const liveOf = (id) => { const p = E.LIVE.prices[id]; return p ? { value: p.price, ts: p.ts, n: p.n, round: p.round } : null; };
+const pubPor = (f) => E.POR.pub(f, liveOf(f.id));
+const vrf60 = {}, ipOf = (req) => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+function limit(bucket, ip, n, ms) { const now = Date.now(); bucket[ip] = (bucket[ip] || []).filter((t) => now - t < ms); if (bucket[ip].length >= n) return false; bucket[ip].push(now); return true; }
+function twaps() { return SRC.SIGNALS.map((s) => { const row = { id: s.id, name: s.name, cls: s.cls, price: E.LIVE.prices[s.id] ? E.LIVE.prices[s.id].price : null };
+  for (const w of Object.keys(E.TW.WIN)) { const tid = E.TW.idOf(s.id, w), p = tid && E.LIVE.prices[tid]; row[w] = p ? { id: tid, value: p.price, ts: p.ts } : null; } return row; }); }
 function staking(wallet) { const st = S(), stk = ST.IDX.stakers, all = [...st.validators.map((v) => ({ name: v.name, address: v.address.toLowerCase(), genesis: true, base: v.stake, rounds: v.rounds, missed: v.missed, dev: v.devN ? v.devSum / v.devN : null, jails: 0, active: true })),
     ...Object.values(st.open || {}).map((o) => ({ name: o.name, address: o.address, genesis: false, base: o.base || E.OPEN_POWER, rounds: o.rounds, missed: o.missed, dev: o.devN ? o.devSum / o.devN : null, jails: o.jails || 0, active: E.isActive(o), jailed: o.jailedUntil > Date.now() ? o.jailedUntil : null, owner: o.owner }))];
   const rows = all.map((v) => { const s = stk[v.address] || {}, staked = E.STAKED[v.address] || 0; return { ...v, staked, power: v.base + staked, stakers: Object.values(s).filter((x) => x > 1e-9).length, uptime: v.rounds / Math.max(1, v.rounds + v.missed), mine: wallet ? s[String(wallet).toLowerCase()] || 0 : undefined, slashes: (st.staking.slashes || []).filter((x) => x.node === v.address && x.ok).length }; }).sort((a, b) => b.power - a.power);
@@ -109,6 +128,19 @@ http.createServer(async (req, res) => { const u = new URL(req.url, 'http://x'), 
     if (p === '/api/scripts') return send(200, { min: SCRIPT_MIN, cap: SCRIPT_CAP, scripts: E.SCR.all().map(pubScript) });
     if (p === '/api/scripts/request') { const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim(), now = Date.now(); req60[ip] = (req60[ip] || []).filter((t) => now - t < 60000); if (req60[ip].length >= 6) return send(429, { error: 'up to 6 on-demand requests per minute' }); req60[ip].push(now);
       const r = await E.SCR.request(u.searchParams.get('id'), E.CHAIN_ID, E.powerOf); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/vrf' && req.method === 'POST') { if (!limit(vrf60, ipOf(req), 10, 60000)) return send(429, { error: 'up to 10 randomness requests per minute' }); const b = await readBody(req), r = E.VRF.request(b.seed, b.requester); E.markDirty(); return send(r.error ? 400 : 200, r.error ? r : E.VRF.pub(r)); }
+    if (p === '/api/vrf') return send(200, { ...E.VRF.stats(), roundMs: E.ROUND_MS, round: S().round, requests: E.VRF.all().slice(0, Math.min(100, +u.searchParams.get('limit') || 20)).map(E.VRF.pub) });
+    if (p.startsWith('/api/vrf/')) { const r = E.VRF.get(p.slice(9)); if (!r) return send(404, { error: 'unknown request' }); const out = E.VRF.pub(r); if (r.set) out.set = r.set; return send(200, out); }
+    if (p === '/api/reserves' && req.method === 'POST') { const r = await publishPor(await readBody(req)); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/reserves') return send(200, { min: POR_MIN, cap: POR_CAP, feeds: E.POR.all().map(pubPor) });
+    if (p === '/api/twap') return send(200, { windows: E.TW.WIN, round: S().round, feeds: twaps() });
+    if (p === '/api/history') { const id = u.searchParams.get('id') || '', range = u.searchParams.get('range') || '24h'; if (!SIG[id]) return send(404, { error: 'unknown feed' }); return send(200, E.TW.history(S(), id, E.TW.RANGES[range] ? range : '24h', Math.floor(Date.now() / 1000))); }
+    if (p === '/api/alerts' && req.method === 'POST') { const r = await AL.create(await readBody(req), ipOf(req)); if (!r.error) E.markDirty(); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/alerts/mine' && req.method === 'POST') return send(200, { alerts: AL.mine((await readBody(req)).items) });
+    if (p === '/api/alerts/test' && req.method === 'POST') { const r = await AL.test(await readBody(req)); E.markDirty(); return send(r.error && !r.alert ? 400 : 200, r); }
+    if (p === '/api/alerts/delete' && req.method === 'POST') { const r = AL.remove(await readBody(req)); E.markDirty(); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/alerts/toggle' && req.method === 'POST') { const r = AL.toggle(await readBody(req)); E.markDirty(); return send(r.error ? 400 : 200, r); }
+    if (p === '/api/alerts') return send(200, AL.stats());
     if (p === '/api/staking') return send(200, staking(u.searchParams.get('wallet')));
     if (p === '/api/listings' && req.method === 'POST') { const r = await createListing(await readBody(req)); return send(r.error ? 400 : 200, r); }
     if (p === '/api/listings') return send(200, { min: LIST_MIN, cap: LIST_CAP, listings: [...(S().listings || [])].reverse().map((l) => ({ ...l, live: E.LIVE.prices[l.id] ? E.LIVE.prices[l.id].price : null })) });

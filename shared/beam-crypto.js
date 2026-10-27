@@ -45,6 +45,13 @@
   function verifyPacket(p, validators) { const dg = packetDigest(p), total = Object.values(validators).reduce((a, b) => a + b, 0); let power = 0; const seen = new Set(), signers = [];
     for (const sg of p.sigs || []) { let a = null; try { a = recover(dg, sg); } catch {} const pw0 = a && validators[a.toLowerCase()]; signers.push({ sig: sg, signer: a, power: pw0 || 0, valid: !!pw0 && !seen.has(a) }); if (pw0 && !seen.has(a)) { seen.add(a); power += pw0; } }
     return { digest: dg, hash: packetHash(p), power, total, quorum: power * 3 > total * 2, signers }; }
-  const api = { keccak, sign, recover, addressOf, ethSigned, personal, packetHash, packetDigest, verifyPacket, idBytes32, hex, unhex };
+  // BEAM VRF: alpha = keccak256(abi.encodePacked(bytes7("BEAMvrf"), uint256 chainId, uint64 requestId, bytes32 seed, bytes32 roundHash)),
+  // each validator signs the EIP-191 digest of alpha; randomness = keccak256(sig1 ‖ sig2 ‖ …) with signatures ordered by signer address
+  const vrfAlpha = (chainId, id, seed, roundHash) => '0x' + keccak(unhex(hex(new TextEncoder().encode('BEAMvrf')) + b32(BigInt(chainId)) + u64(id) + String(seed).replace(/^0x/, '').padStart(64, '0') + String(roundHash).replace(/^0x/, '').padStart(64, '0')));
+  const vrfRandomness = (sigs) => '0x' + keccak(unhex(sigs.map((x) => String(x).replace(/^0x/, '')).join('')));
+  function verifyVrf(r, validators) { const alpha = vrfAlpha(r.chainId, r.id, r.seed, r.roundHash), dg = '0x' + ethSigned(alpha), total = Object.values(validators).reduce((a, b) => a + b, 0); let power = 0, prev = '', ordered = true; const signers = [];
+    for (const sg of r.sigs || []) { let a = null; try { a = recover(dg, sg).toLowerCase(); } catch {} const pw0 = a && validators[a]; if (a && a <= prev) ordered = false; if (a) prev = a; signers.push({ sig: sg, signer: a, power: pw0 || 0, valid: !!pw0 && ordered }); if (pw0 && ordered) power += pw0; }
+    const randomness = vrfRandomness(r.sigs || []); return { alpha, digest: dg, power, total, ordered, quorum: ordered && power * 3 > total * 2, signers, randomness, match: randomness === String(r.randomness).toLowerCase() }; }
+  const api = { vrfAlpha, vrfRandomness, verifyVrf, keccak, sign, recover, addressOf, ethSigned, personal, packetHash, packetDigest, verifyPacket, idBytes32, hex, unhex };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.BeamCrypto = api;
 })(typeof window !== 'undefined' ? window : globalThis);

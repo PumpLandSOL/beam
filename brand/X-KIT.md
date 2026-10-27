@@ -591,3 +591,15 @@ Get help running a node, request feeds, talk to the team.
 
 https://discord.gg/ZWP3khEWNF
 ```
+
+### 49. Set 5 · 240 chars · media: `beam-v5-24s.mp4`
+```
+$BEAM just became a full oracle stack on Robinhood Chain:
+
+VRF: randomness any contract can verify
+Proof of Reserves: backing checked every round
+TWAP: prices that can't be spiked
+Alerts: the oracle pings your Discord
+
+beamprotocol.org/docs
+```

@@ -4,7 +4,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 const api = async (p, b) => { const r = await fetch(p, b ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) } : {}); return r.json(); };
 const LOGO = `<svg viewBox="0 0 40 40" fill="none"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset=".35" stop-color="#06b6d4"/><stop offset=".65" stop-color="#22c55e"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs><path d="M2 21h13" stroke="#f3f1ec" stroke-width="2.4" stroke-linecap="round"/><path d="M20 6 31 30H9z" stroke="#f3f1ec" stroke-width="2.4" stroke-linejoin="round" fill="#04040a"/><path d="M24 19l14-7M25 21l13-2M25 23l13 3M24 25l14 7" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round"/></svg>`;
-const NAV = [['/staking', 'Stake'], ['/scripts', 'Scripts'], ['/run', 'Run'], ['/season', 'Season'], ['/listings', 'List'], ['/embed', 'Stream'], ['/onchain', 'On-chain'], ['/status', 'Status'], ['/feeds', 'Feeds'], ['/tunnels', 'Tunnels'], ['/validators', 'Validators'], ['/explorer', 'Explorer'], ['/verify', 'Verify'], ['/docs', 'Docs']];
+const NAV = [['/staking', 'Stake'], ['/scripts', 'Scripts'], ['/vrf', 'VRF'], ['/reserves', 'Reserves'], ['/twap', 'TWAP'], ['/alerts', 'Alerts'], ['/run', 'Run'], ['/season', 'Season'], ['/listings', 'List'], ['/embed', 'Stream'], ['/onchain', 'On-chain'], ['/status', 'Status'], ['/feeds', 'Feeds'], ['/tunnels', 'Tunnels'], ['/validators', 'Validators'], ['/explorer', 'Explorer'], ['/verify', 'Verify'], ['/docs', 'Docs']];
 function liveStrip() { api('/api/status').then((s) => { const z = '0x0000000000000000000000000000000000000000'; if (!s.receiver || s.receiver === z) return;
   const ex = s.explorer || BEAM.chain.explorer, ago = s.relayStats && s.relayStats.last ? Math.max(1, Math.round((Date.now() - s.relayStats.last) / 60000)) + ' min ago' : 'pending';
   const d = document.createElement('div'); d.className = 'livebar';
@@ -27,7 +27,7 @@ function fp(v) { if (v == null) return '—'; const a = Math.abs(v), d = a >= 1 
 const fpct = (v) => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
 const short = (a) => a ? a.slice(0, 6) + '…' + a.slice(-4) : '';
 const ago = (ts) => { const s = Math.max(0, Math.floor(Date.now() / 1000 - ts)); return s < 60 ? s + 's ago' : s < 3600 ? Math.floor(s / 60) + 'm ago' : s < 86400 ? Math.floor(s / 3600) + 'h ago' : Math.floor(s / 86400) + 'd ago'; };
-const CLS = { crypto: 'Crypto', equity: 'US equity', fx: 'FX', commodity: 'Commodity', script: 'Oracle script' };
+const CLS = { crypto: 'Crypto', equity: 'US equity', fx: 'FX', commodity: 'Commodity', script: 'Oracle script', por: 'Proof of reserves', twap: 'TWAP' };
 function sparkSvg(pts, w = 120, h = 34, col) { if (!pts || pts.length < 2) return ''; const mn = Math.min(...pts), mx = Math.max(...pts), r = mx - mn || 1;
   const d = pts.map((p, i) => (i ? 'L' : 'M') + (i / (pts.length - 1) * w).toFixed(1) + ' ' + (h - 3 - (p - mn) / r * (h - 6)).toFixed(1)).join(''); const c = col || (pts[pts.length - 1] >= pts[0] ? '#0f9d58' : '#e5484d');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><path d="${d}" fill="none" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/></svg>`; }

@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TWAP feeds · BEAM</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><meta name="description" content="Time-weighted average prices for every BEAM feed over 5 minutes, 1 hour and 24 hours, signed into packets and readable on Robinhood Chain.">
+<style>.lay{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;margin-top:26px;align-items:start}.pan{padding:22px 24px}
+.rg{display:flex;gap:6px;flex-wrap:wrap}.rg button{height:32px;padding:0 13px;border-radius:999px;border:1px solid var(--rule2);background:none;font:12px var(--mono)}.rg button.on{background:var(--ink);color:var(--bg)}
+#ch{width:100%;height:340px;display:block}.lg{display:flex;gap:16px;font:12px var(--mono);color:var(--ink3);margin-top:10px;flex-wrap:wrap}.lg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.tw3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}.tw3 div{padding:14px 16px;border:1px solid var(--rule);border-radius:6px}.tw3 b{display:block;font:400 26px/1.1 var(--serif)}.tw3 span{font:11px var(--mono);letter-spacing:.1em;color:var(--ink3)}
+.tbl tr{cursor:pointer}.tbl tr.on td{background:rgba(255,255,255,.04)}
+@media(max-width:900px){.lay{grid-template-columns:1fr}}@media(max-width:620px){.tw3{grid-template-columns:1fr}}</style></head><body>
+<main class="wrap"><section class="pageh"><div class="eyebrow"><i></i>TWAP · new</div><h1 class="h2">The average, <span class="it">signed.</span></h1><p>Every feed also publishes its time-weighted average price over 5 minutes, 1 hour and 24 hours, computed each round from the agreed round history. TWAPs are signed into packets like any price, Beam Core carries every 1h TWAP to BeamReceiver, and a contract reads one with <span class="mono">getPriceNoOlderThan("TWAP:EQ:TSLA-USD:1h", 3600)</span>. Use them where a single print should not decide: liquidations, settlement, collateral marks.</p></section>
+<div class="lay"><div class="card pan"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><div class="eyebrow"><i></i><span id="fid">CS:BTC-USD</span></div><div style="font:400 44px/1 var(--serif);margin-top:8px" id="px">—</div></div><div class="rg" id="rg"></div></div>
+ <div class="tw3" id="tw3"></div><canvas id="ch" style="margin-top:16px"></canvas>
+ <div class="lg"><span><i style="background:#f3f1ec"></i>agreed price</span><span><i style="background:#22d3ee"></i>rolling TWAP <span id="lw">1h</span></span></div>
+ <div class="rg" id="wg" style="margin-top:12px"></div><div class="mono dim" style="font-size:12px;margin-top:12px" id="hint"></div></div>
+ <div class="card"><table class="tbl"><thead><tr><th>Feed</th><th class="r">Spot</th><th class="r">5m</th><th class="r">1h</th><th class="r">24h</th></tr></thead><tbody id="tb"><tr><td colspan="5" class="dim">Loading…</td></tr></tbody></table></div></div></main>
+<script src="/app.js"></script><script>chrome('/twap');
+let ID = new URLSearchParams(location.search).get('id') || 'CS:BTC-USD', R = '24h', W = '1h', H = null, T = null, ROWS = [];
+$('rg').innerHTML = ['1h', '6h', '24h', '7d'].map((r) => `<button data-r="${r}" onclick="R='${r}';chartLoad()">${r.toUpperCase()}</button>`).join('');
+$('wg').innerHTML = ['5m', '1h', '24h'].map((w) => `<button data-w="${w}" onclick="W='${w}';chartLoad()">TWAP ${w}</button>`).join('');
+const pick = (id) => { ID = id; history.replaceState(null, '', '/twap?id=' + encodeURIComponent(id)); chartLoad(); table(); };
+function table() { $('tb').innerHTML = ROWS.map((f) => `<tr class="${f.id === ID ? 'on' : ''}" onclick="pick('${esc(f.id)}')"><td><b class="mono" style="font-size:12px">${esc(f.id)}</b><div class="dim" style="font-size:12px">${esc(f.name)}</div></td><td class="r num">${fp(f.price)}</td>${['5m', '1h', '24h'].map((w) => `<td class="r num${f[w] ? '' : ' dim'}">${f[w] ? fp(f[w].value) : '—'}</td>`).join('')}</tr>`).join(''); }
+async function load() { const d = await api('/api/twap'); ROWS = d.feeds; table(); }
+async function chartLoad() { document.querySelectorAll('#rg button').forEach((b) => b.classList.toggle('on', b.dataset.r === R)); document.querySelectorAll('#wg button').forEach((b) => b.classList.toggle('on', b.dataset.w === W)); $('lw').textContent = W;
+  const tid = 'TWAP:' + ID + ':' + W; [H, T] = await Promise.all([api('/api/history?id=' + encodeURIComponent(ID) + '&range=' + R), api('/api/history?id=' + encodeURIComponent(tid) + '&range=' + R)]);
+  if (H.error) { $('px').textContent = 'Unknown feed'; return; } const live = ROWS.find((f) => f.id === ID); $('fid').textContent = ID; $('px').textContent = live ? fp(live.price) : fp((H.points[H.points.length - 1] || [])[1]);
+  $('tw3').innerHTML = ['5m', '1h', '24h'].map((w) => `<div><span>TWAP:${esc(ID)}:${w}</span><b>${fp(H.twap[w])}</b></div>`).join('');
+  $('hint').textContent = T.error ? 'This feed id is too long for a bytes32 TWAP id.' : `On-chain id: ${tid} · ${H.points.length} points over ${R}`; draw(); }
+function draw() { const cv = $('ch'), g = cv.getContext('2d'), Wd = cv.clientWidth, Ht = cv.clientHeight, dpr = devicePixelRatio || 1; cv.width = Wd * dpr; cv.height = Ht * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const a = H.points, b = T && !T.error ? T.points : []; if (a.length < 2) { g.font = '14px Inter Tight'; g.fillStyle = '#8b8a93'; g.fillText('Collecting history. The chart fills in as rounds land.', 20, 40); return; }
+  const all = a.concat(b).map((p) => p[1]), lo = Math.min(...all), hi = Math.max(...all), r = hi - lo || hi * .001 || 1, t0 = a[0][0], t1 = a[a.length - 1][0], pl = 10, pr = 80;
+  const X = (t) => pl + (t - t0) / ((t1 - t0) || 1) * (Wd - pl - pr), Y = (v) => 14 + (1 - (v - lo) / r) * (Ht - 40);
+  g.strokeStyle = 'rgba(255,255,255,.07)'; g.lineWidth = 1; g.font = '11px JetBrains Mono'; g.fillStyle = '#8b8a93'; for (let k = 0; k <= 4; k++) { const v = lo + r * k / 4, y = Y(v); g.beginPath(); g.moveTo(pl, y); g.lineTo(Wd - pr, y); g.stroke(); g.fillText(fp(v), Wd - pr + 8, y + 4); }
+  const line = (pts, col, w) => { g.beginPath(); pts.forEach(([t, v], i) => (i ? g.lineTo(X(t), Y(v)) : g.moveTo(X(t), Y(v)))); g.strokeStyle = col; g.lineWidth = w; g.stroke(); };
+  line(a, 'rgba(243,241,236,.75)', 1.4); if (b.length > 1) line(b, '#22d3ee', 2.4);
+  g.fillStyle = '#8b8a93'; [0, .5, 1].forEach((f) => { const t = new Date((t0 + (t1 - t0) * f) * 1000); g.fillText(R === '7d' ? t.toLocaleDateString() : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), Math.min(Wd - pr - 60, pl + f * (Wd - pl - pr - 60)), Ht - 6); }); }
+load().then(chartLoad); setInterval(load, 10000); setInterval(chartLoad, 30000); addEventListener('resize', () => H && draw());
+</script></body></html>

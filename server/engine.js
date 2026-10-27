@@ -2,7 +2,7 @@
 // package prices into packets signed by the validators for the BeamReceiver contract on Robinhood Chain.
 'use strict';
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
-const C = require('../shared/beam-crypto.js'), SRC = require('./sources.js'), SCR = require('./scripts.js');
+const C = require('../shared/beam-crypto.js'), SRC = require('./sources.js'), SCR = require('./scripts.js'), POR = require('./por.js'), TW = require('./twap.js'), VRF = require('./vrf.js');
 const DATA = process.env.DATA_PATH || path.join(__dirname, '..', 'data'), FILE = path.join(DATA, 'beam.json');
 const ROUND_MS = +process.env.BEAM_ROUND_MS || 10000, CHAIN_ID = +(process.env.CHAIN_ID || 4663), SCALE = 1e8;
 let RECEIVER = (process.env.BEAM_RECEIVER || '0x0000000000000000000000000000000000000000').toLowerCase();
@@ -23,7 +23,7 @@ S.open = S.open || {};
 const SEASON_END = Date.parse(process.env.BEAM_SEASON_END || '2026-12-31T23:59:59Z');
 S.season = S.season || { n: 1, start: Date.now(), pts: {} };
 S.listings = S.listings || []; for (const l of S.listings) SRC.addSignal(l);
-SCR.init(S, () => S.validators, SRC.addSignal);
+SCR.init(S, () => S.validators, SRC.addSignal); POR.init(S, () => S.validators, SRC.addSignal);
 // staked $BEAM (BeamStaking on Robinhood Chain): 1 staked token = 1 unit of voting power on top of a validator's base power
 const STAKED = {}; const powerOf = (v) => (v.priv ? v.stake + (STAKED[v.address.toLowerCase()] || 0) : v.power || v.stake);
 function award(owner, kind, n) { if (!owner || owner === 'beam' || Date.now() > SEASON_END) return; const a = String(owner).toLowerCase(), p = S.season.pts[a] || (S.season.pts[a] = { validate: 0, cosign: 0, tunnel: 0, list: 0, total: 0, first: Date.now() }); p[kind] = p[kind] || 0; p[kind] += n; p.total += n; p.last = Date.now(); }
@@ -42,7 +42,7 @@ function wmedian(pairs) { const s = [...pairs].sort((a, b) => a[0] - b[0]), tot 
 
 // ---------- one round ----------
 function validatorSubmit(v) { const out = {};
-  for (const sg of SRC.SIGNALS) { const vals = []; if (sg.cls === 'script') { const x = SCR.valueFor(v.address, sg.id); if (x != null) vals.push(x); } else if (sg.cls === 'crypto') { for (const s of v.sources) if (CRYPTO_SRC.includes(s)) { const p = SRC.read(s, sg.sym); if (p) vals.push(p); } }
+  for (const sg of SRC.SIGNALS) { const vals = []; if (sg.cls === 'script' || sg.cls === 'por') { const x = (sg.cls === 'por' ? POR : SCR).valueFor(v.address, sg.id); if (x != null) vals.push(x); } else if (sg.cls === 'crypto') { for (const s of v.sources) if (CRYPTO_SRC.includes(s)) { const p = SRC.read(s, sg.sym); if (p) vals.push(p); } }
     else { const s = v.sources.find((x) => x.startsWith('yahoo')), p = SRC.read(s, sg.sym) || SRC.read(s === 'yahoo1' ? 'yahoo2' : 'yahoo1', sg.sym); if (p) vals.push(p); }
     if (vals.length) out[sg.id] = median(vals); }
   return out; }
@@ -67,8 +67,11 @@ function round() {
     const h = (S.hist[id] = S.hist[id] || []); h.push([ts, +p.price.toPrecision(10)]); if (h.length > 2200) h.splice(0, h.length - 2200);
     const minute = ts - (ts % 60), cs = (S.candles[id] = S.candles[id] || []), last = cs[cs.length - 1];
     if (last && last[0] === minute) { last[2] = Math.max(last[2], p.price); last[3] = Math.min(last[3], p.price); last[4] = p.price; } else { cs.push([minute, p.price, p.price, p.price, p.price]); if (cs.length > 10080) cs.splice(0, cs.length - 10080); } }
+  // TWAP:<feed>:<window> from the agreed history, carried with the power and signer count of the feed it averages
+  for (const id of Object.keys(prices)) for (const [w, span] of Object.entries(TW.WIN)) { const tid = TW.idOf(id, w), x = tid && TW.compute(S, id, span, ts); if (x != null && isFinite(x)) LIVE.prices[tid] = { price: +x.toPrecision(12), power: prices[id].power, n: prices[id].n, spread: 0, ts, round: n, chg: null, twap: true }; }
   LIVE.subs = Object.fromEntries(subs.map((s) => [s.v.address, s.px]));
-  dirty = true; tunnels(ts);
+  dirty = true; tunnels(ts); try { VRF.fulfil(rec); } catch (e) { console.error('vrf', e.message); }
+  if (module.exports.onRound) try { module.exports.onRound(LIVE.rounds[0]); } catch (e) { console.error('onRound', e.message); }
 }
 // ---------- tunnels & packets ----------
 function makePacket(t, ts) { const ids = t.signals.filter((id) => LIVE.prices[id]); if (!ids.length) return null;
@@ -90,8 +93,10 @@ function tunnels(ts) { for (const t of Object.values(S.tunnels)) { if (!t.active
 function createTunnel(o) { const id = ++S.tunnelSeq; const t = { id, name: String(o.name || 'Tunnel ' + id).replace(/[<>]/g, '').slice(0, 40), owner: o.owner, signals: o.signals, interval: o.interval, deviationBps: o.deviationBps,
   receiver: (o.receiver || RECEIVER).toLowerCase(), chainId: CHAIN_ID, created: Math.floor(Date.now() / 1000), active: true, seq: 0, lastTs: 0, packets: 0 }; S.tunnels[id] = t; dirty = true; return t; }
 if (!S.tunnels[1]) { S.tunnelSeq = Math.max(S.tunnelSeq, 0); const t = createTunnel({ name: 'Beam Core', owner: 'beam', signals: SRC.SIGNALS.map((s) => s.id), interval: 60, deviationBps: 50 }); S.tunnels[1] = t; }
-// Beam Core carries every oracle-script feed on-chain alongside prices
-const coreScripts = () => { const t = S.tunnels[1]; if (t) for (const sc of S.scripts) if (!t.signals.includes(sc.id)) t.signals.push(sc.id); }; coreScripts();
+// Beam Core carries every oracle-script and proof-of-reserves feed, and the 1h TWAP of every feed, on-chain alongside prices
+VRF.init(S, () => S.validators, vset, CHAIN_ID);
+const coreScripts = () => { const t = S.tunnels[1]; if (!t) return; for (const sc of [...S.scripts, ...S.por]) if (!t.signals.includes(sc.id)) t.signals.push(sc.id);
+  for (const sg of SRC.SIGNALS) { const tid = TW.idOf(sg.id, '1h'); if (tid && !t.signals.includes(tid)) t.signals.push(tid); } }; coreScripts();
 for (const t of Object.values(S.tunnels)) if (t.owner === 'beam' && RECEIVER !== '0x0000000000000000000000000000000000000000') t.receiver = RECEIVER;
 
 // one-time history backfill so charts and 24h change are real from the first minute (Coinbase 5m candles, Yahoo 5m bars)
@@ -127,11 +132,15 @@ function signOpen(b) { const a = String(b.node || '').toLowerCase(), o = S.open[
   const p = PENDING.packets.find((x) => x.tunnelId === +b.tunnelId && x.seq === +b.seq); if (!p) return { error: 'packet already finalized' };
   let r; try { r = C.recover(p.digest, b.sig).toLowerCase(); } catch { return { error: 'bad signature' }; } if (r !== a) return { error: 'signature does not match validator' };
   p.cosig[a] = b.sig; o.signed++; award(o.owner, 'cosign', 5 * pmult(o)); o.lastSeen = Date.now(); return { ok: true }; }
-function start() { backfill().catch(() => {}); SRC.start(); SCR.start(); setTimeout(function tick() { try { round(); } catch (e) { console.error('round', e); } setTimeout(tick, ROUND_MS); }, 6000); }
+function start() { backfill().catch(() => {}); SRC.start(); SCR.start(); POR.start(); setTimeout(function tick() { try { round(); } catch (e) { console.error('round', e); } setTimeout(tick, ROUND_MS); }, 6000); }
 function season(wallet) { const rows = Object.entries(S.season.pts).map(([a, p]) => ({ wallet: a, ...p, total: Math.round(p.total), validate: Math.round(p.validate), cosign: Math.round(p.cosign), tunnel: Math.round(p.tunnel), list: Math.round(p.list || 0), script: Math.round(p.script || 0) })).sort((x, y) => y.total - x.total);
   rows.forEach((x, i) => { x.rank = i + 1; }); const me = wallet ? rows.find((x) => x.wallet === String(wallet).toLowerCase()) || null : undefined;
   return { season: S.season.n, start: S.season.start, end: SEASON_END, live: Date.now() <= SEASON_END, players: rows.length, points: rows.reduce((t, x) => t + x.total, 0), rules: { validate: 10, cosign: 5, tunnel: 2, list: 50, script: 50, maxMult: 4 }, top: rows.slice(0, 100), me }; }
 function addScript(sc, owner) { const x = SCR.add(sc, owner); coreScripts(); award(owner, 'script', 50); dirty = true; save(); return x; }
-function addListing(l) { S.listings.push(l); SRC.addSignal(l); award(l.owner, 'list', 50); dirty = true; save(); }
+function addPor(f, owner) { const x = POR.add(f, owner); coreScripts(); award(owner, 'list', 50); dirty = true; save(); return x; }
+// a report any contract can check: keccak256("BEAMos", chainId, id, ts, value), EIP-191 signed by every genesis validator
+function attest(id, value, ts) { const fixed = Math.round(value * SCALE), hash = SCR.reportHash(CHAIN_ID, id, ts, fixed), dg = '0x' + C.ethSigned(hash);
+  return { id, value, fixed: String(fixed), ts, chainId: CHAIN_ID, hash, digest: dg, signers: S.validators.length, signatures: S.validators.map((v) => ({ validator: v.name, address: v.address, sig: C.sign(dg, v.priv) })) }; }
+function addListing(l) { S.listings.push(l); SRC.addSignal(l); coreScripts(); award(l.owner, 'list', 50); dirty = true; save(); }
 function setReceiver(a) { RECEIVER = String(a).toLowerCase(); S.receiver = RECEIVER; for (const t of Object.values(S.tunnels)) if (t.owner === 'beam') t.receiver = RECEIVER; module.exports.RECEIVER = RECEIVER; dirty = true; save(); }
-module.exports = { addScript, STAKED, powerOf, SCR, addListing, season, setReceiver, joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };
+module.exports = { addPor, attest, POR, TW, VRF, onRound: null, addScript, STAKED, powerOf, SCR, addListing, season, setReceiver, joinOpen, work, submitOpen, signOpen, pubOpen, activeOpen, isActive, OPEN_POWER, S: () => S, LIVE, start, round, createTunnel, vset, SCALE, CHAIN_ID, RECEIVER, ROUND_MS, save, onPacket: null, markDirty: () => { dirty = true; } };
